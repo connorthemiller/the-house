@@ -1,0 +1,219 @@
+/* The House -- Dark theme (terrarium aesthetic) */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0a0a0a;
+  color: #e0e0e0;
+  font-family: monospace;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 16px;
+}
+
+h1 {
+  font-size: 14px;
+  font-weight: normal;
+  color: #555;
+  margin-bottom: 8px;
+  letter-spacing: 2px;
+}
+
+#hud {
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 12px;
+  height: 18px;
+}
+
+#canvas-wrap {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+}
+
+canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  cursor: crosshair;
+  image-rendering: auto;
+}
+
+#ui-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Info panel */
+.info-panel {
+  position: absolute;
+  background: rgba(26, 26, 26, 0.95);
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 10px 14px;
+  font-family: monospace;
+  font-size: 12px;
+  color: #ccc;
+  pointer-events: auto;
+  min-width: 160px;
+  z-index: 11;
+}
+
+.info-emoji {
+  font-size: 28px;
+  margin-bottom: 4px;
+}
+
+.info-name {
+  font-size: 14px;
+  color: #e0e0e0;
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+.info-type {
+  color: #888;
+  margin-bottom: 6px;
+}
+
+.info-row {
+  margin-bottom: 2px;
+}
+
+.info-row span {
+  color: #666;
+}
+
+.info-action {
+  margin-top: 8px;
+  color: #c66;
+  cursor: pointer;
+}
+
+.info-action:hover {
+  color: #f88;
+}
+
+/* Emoji picker */
+.emoji-picker {
+  position: absolute;
+  background: rgba(26, 26, 26, 0.95);
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 8px;
+  pointer-events: auto;
+  z-index: 11;
+}
+
+.picker-title {
+  font-family: monospace;
+  font-size: 11px;
+  color: #666;
+  margin-bottom: 6px;
+  text-align: center;
+}
+
+.picker-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 44px);
+  gap: 4px;
+}
+
+.picker-cell {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.picker-cell:hover {
+  background: #1a1a2a;
+  border-color: #444;
+}
+
+/* Room navigation (single-room mobile mode) */
+#room-nav {
+  display: none; /* shown via JS when mode=single */
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+#nav-label {
+  font-family: monospace;
+  font-size: 13px;
+  color: #888;
+  min-width: 100px;
+  text-align: center;
+}
+
+.nav-btn {
+  width: 44px;
+  height: 44px;
+  background: #111;
+  color: #ccc;
+  border: 1px solid #333;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-btn:hover:not(:disabled) {
+  background: #1a1a2a;
+  border-color: #555;
+}
+
+.nav-btn:disabled {
+  color: #333;
+  cursor: default;
+  border-color: #1a1a1a;
+}
+
+/* Mobile adjustments */
+@media (max-width: 600px) {
+  body {
+    padding: 8px;
+  }
+
+  #canvas-wrap {
+    width: 100%;
+  }
+
+  .picker-grid {
+    grid-template-columns: repeat(3, 52px);
+    gap: 6px;
+  }
+
+  .picker-cell {
+    width: 52px;
+    height: 52px;
+    font-size: 28px;
+  }
+
+  .info-panel {
+    max-width: 80vw;
+  }
+}

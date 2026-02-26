@@ -1,0 +1,43 @@
+{
+  "rooms": [
+    {
+      "id": "bedroom",
+      "name": "Bedroom",
+      "cols": 6,
+      "rows": 5,
+      "color": "#1a1520"
+    },
+    {
+      "id": "living_room",
+      "name": "Living Room",
+      "cols": 8,
+      "rows": 5,
+      "color": "#151a1a"
+    },
+    {
+      "id": "kitchen",
+      "name": "Kitchen",
+      "cols": 6,
+      "rows": 5,
+      "color": "#1a1815"
+    }
+  ],
+  "doorways": [
+    {
+      "from": "bedroom",
+      "to": "living_room",
+      "fromCol": 5,
+      "fromRow": 2,
+      "toCol": 0,
+      "toRow": 2
+    },
+    {
+      "from": "living_room",
+      "to": "kitchen",
+      "fromCol": 7,
+      "fromRow": 2,
+      "toCol": 0,
+      "toRow": 2
+    }
+  ]
+}
