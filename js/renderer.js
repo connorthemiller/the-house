@@ -16,6 +16,12 @@ class Renderer {
     this.roomLayout = null; // computed positions
     this.mode = 'panorama'; // 'panorama' or 'single'
     this.currentRoomId = null; // active room in single mode
+    this.creature = null;
+    this.dragObject = null; // { emoji, x, y } when dragging an object
+  }
+
+  setCreature(creature) {
+    this.creature = creature;
   }
 
   init() {
@@ -164,6 +170,9 @@ class Renderer {
       this._drawObjects(roomId);
     }
 
+    this._drawCreature();
+    this._drawDragObject();
+
     for (const roomId of visibleRooms) {
       this._drawLabel(roomId);
     }
@@ -237,6 +246,97 @@ class Renderer {
 
     const cx = pos.x + (pos.cols * CELL) / 2;
     ctx.fillText(room.name, cx, pos.y - 4);
+  }
+
+  _drawCreature() {
+    if (!this.creature) return;
+    var c = this.creature;
+    var ctx = this.ctx;
+
+    // Dragging -- draw at pixel position
+    if (c.dragging && c._dragPixel) {
+      var dx = c._dragPixel.x;
+      var dy = c._dragPixel.y;
+      ctx.font = EMOJI_FONT;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(c.emoji, dx, dy);
+
+      // Name below
+      ctx.font = '10px monospace';
+      ctx.fillStyle = '#888';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillText(c.name, dx, dy + CELL / 2 + 2);
+      return;
+    }
+
+    // Normal grid position
+    var pos = this.roomLayout.rooms[c.room];
+    if (!pos) return;
+
+    var cx = pos.x + c.col * CELL + CELL / 2;
+    var cy = pos.y + c.row * CELL + CELL / 2;
+
+    // Creature emoji
+    ctx.font = EMOJI_FONT;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(c.emoji, cx, cy);
+
+    // Name label below
+    ctx.font = '10px monospace';
+    ctx.fillStyle = '#888';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(c.name, cx, pos.y + c.row * CELL + CELL + 1);
+
+    // Speech bubble
+    if (c.speech && c.speech.text && Date.now() < c.speech.expiresAt) {
+      this._drawSpeechBubble(cx, pos.y + c.row * CELL - 2, c.speech.text);
+    }
+  }
+
+  _drawSpeechBubble(cx, bottomY, text) {
+    var ctx = this.ctx;
+    ctx.font = '11px monospace';
+    var metrics = ctx.measureText(text);
+    var tw = metrics.width;
+    var pad = 6;
+    var bw = tw + pad * 2;
+    var bh = 18;
+    var bx = cx - bw / 2;
+    var by = bottomY - bh - 4;
+
+    // Background
+    ctx.fillStyle = 'rgba(20, 20, 20, 0.9)';
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(bx, by, bw, bh, 4);
+    } else {
+      ctx.rect(bx, by, bw, bh);
+    }
+    ctx.fill();
+
+    // Border
+    ctx.strokeStyle = '#444';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Text
+    ctx.fillStyle = '#ddd';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, cx, by + bh / 2);
+  }
+
+  _drawDragObject() {
+    if (!this.dragObject) return;
+    var ctx = this.ctx;
+    ctx.font = EMOJI_FONT;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(this.dragObject.emoji, this.dragObject.x, this.dragObject.y);
   }
 
   // Dim a hex color by brightness factor (0-1)

@@ -19,6 +19,7 @@ class UI {
     this.bus = bus;
     this.world = world;
     this.renderer = renderer;
+    this.creature = null;
     this.overlay = document.getElementById('ui-overlay');
     this.hud = document.getElementById('hud');
     this.navContainer = document.getElementById('room-nav');
@@ -30,13 +31,19 @@ class UI {
 
     this._onObjectTapped = this._onObjectTapped.bind(this);
     this._onEmptyTapped = this._onEmptyTapped.bind(this);
+    this._onCreatureTapped = this._onCreatureTapped.bind(this);
     this._onDayNight = this._onDayNight.bind(this);
     this._onDocClick = this._onDocClick.bind(this);
+  }
+
+  setCreature(creature) {
+    this.creature = creature;
   }
 
   start() {
     this.bus.on('input:object-tapped', this._onObjectTapped);
     this.bus.on('input:empty-tapped', this._onEmptyTapped);
+    this.bus.on('input:creature-tapped', this._onCreatureTapped);
     this.bus.on('daynight:changed', this._onDayNight);
     document.addEventListener('mousedown', this._onDocClick, true);
 
@@ -53,6 +60,7 @@ class UI {
   stop() {
     this.bus.off('input:object-tapped', this._onObjectTapped);
     this.bus.off('input:empty-tapped', this._onEmptyTapped);
+    this.bus.off('input:creature-tapped', this._onCreatureTapped);
     this.bus.off('daynight:changed', this._onDayNight);
     document.removeEventListener('mousedown', this._onDocClick, true);
   }
@@ -173,9 +181,115 @@ class UI {
     });
   }
 
+  _onCreatureTapped(data) {
+    this._dismissPanel();
+    var c = data.creature;
+    if (!c) return;
+
+    var hungerPct = Math.round(c.drives.hunger * 100);
+    var curiosityPct = Math.round(c.drives.curiosity * 100);
+    var comfortPct = Math.round(c.drives.comfort * 100);
+    var energyPct = Math.round(c.drives.energy * 100);
+    var actionText = c.currentAction ? c.currentAction.action.replace(/_/g, ' ') : 'idle';
+    var moodText = c.mood || 'okay';
+
+    var overlay = document.createElement('div');
+    overlay.className = 'creature-modal-overlay';
+
+    overlay.innerHTML =
+      '<div class="creature-modal">' +
+        '<div class="creature-modal-header">' +
+          '<span class="creature-modal-emoji">' + c.emoji + '</span>' +
+          '<div>' +
+            '<div class="creature-modal-name">' + c.name +
+              '<span class="creature-modal-rename" data-action="rename">rename</span>' +
+            '</div>' +
+            '<div class="creature-modal-species">' + c.species + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<hr class="creature-modal-divider">' +
+        '<div class="creature-modal-row">' +
+          '<span class="creature-modal-row-label">mood</span>' +
+          '<span class="creature-modal-row-value">' + moodText + '</span>' +
+        '</div>' +
+        '<div class="creature-modal-row">' +
+          '<span class="creature-modal-row-label">action</span>' +
+          '<span class="creature-modal-row-value">' + actionText + '</span>' +
+        '</div>' +
+        '<hr class="creature-modal-divider">' +
+        this._driveBar('hunger', hungerPct, '#c66') +
+        this._driveBar('curiosity', curiosityPct, '#6ac') +
+        this._driveBar('comfort', comfortPct, '#a6c') +
+        this._driveBar('energy', energyPct, '#ca6') +
+        '<div class="creature-modal-hint">drag to move</div>' +
+      '</div>';
+
+    var self = this;
+
+    // Click overlay background to dismiss
+    overlay.addEventListener('mousedown', function(e) {
+      if (e.target === overlay) {
+        self._dismissPanel();
+      }
+    });
+
+    // Stop clicks inside modal from dismissing
+    var box = overlay.querySelector('.creature-modal');
+    box.addEventListener('mousedown', function(e) { e.stopPropagation(); });
+
+    // Rename
+    var renameBtn = overlay.querySelector('[data-action="rename"]');
+    renameBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      self._dismissPanel();
+      var modal = document.getElementById('naming-modal');
+      var input = document.getElementById('naming-input');
+      var btn = document.getElementById('naming-confirm');
+      var emojiEl = document.getElementById('modal-emoji');
+
+      emojiEl.textContent = c.emoji;
+      input.value = c.name;
+      modal.style.display = 'flex';
+      input.focus();
+      input.select();
+
+      function confirm() {
+        var name = input.value.trim();
+        if (!name) return;
+        c.name = name;
+        modal.style.display = 'none';
+        btn.removeEventListener('click', confirm);
+        input.removeEventListener('keydown', onKey);
+        self.bus.emit('creature:renamed', { name: name });
+      }
+      function onKey(ev) {
+        if (ev.key === 'Enter') confirm();
+      }
+      btn.addEventListener('click', confirm);
+      input.addEventListener('keydown', onKey);
+    });
+
+    document.body.appendChild(overlay);
+    this.activePanel = overlay;
+  }
+
+  _driveBar(label, pct, color) {
+    return '<div class="drive-row">' +
+      '<span class="drive-label">' + label + '</span>' +
+      '<div class="drive-track"><div class="drive-fill" style="width:' + pct + '%;background:' + color + '"></div></div>' +
+      '<span class="drive-pct" style="color:#555;width:30px;text-align:right;flex-shrink:0">' + pct + '%</span>' +
+    '</div>';
+  }
+
   _onEmptyTapped(data) {
     this._dismissPanel();
     const { roomId, col, row } = data;
+
+    // Don't open picker on creature's cell
+    if (this.creature && this.creature.room === roomId &&
+        this.creature.col === col && this.creature.row === row) {
+      return;
+    }
     const pos = this._cellToScreen(roomId, col, row);
 
     const panel = document.createElement('div');

@@ -106,6 +106,13 @@ canvas {
   color: #f88;
 }
 
+.info-hint {
+  margin-top: 6px;
+  font-style: italic;
+  color: #555;
+  font-size: 11px;
+}
+
 /* Emoji picker */
 .emoji-picker {
   position: absolute;
@@ -190,6 +197,191 @@ canvas {
   color: #333;
   cursor: default;
   border-color: #1a1a1a;
+}
+
+/* Naming modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal-box {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 24px 32px;
+  text-align: center;
+  font-family: monospace;
+  min-width: 220px;
+}
+
+.modal-emoji {
+  font-size: 48px;
+  margin-bottom: 8px;
+}
+
+.modal-label {
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 12px;
+}
+
+.modal-input {
+  display: block;
+  width: 100%;
+  background: #111;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #e0e0e0;
+  font-family: monospace;
+  font-size: 16px;
+  padding: 8px 10px;
+  text-align: center;
+  outline: none;
+  margin-bottom: 12px;
+}
+
+.modal-input:focus {
+  border-color: #666;
+}
+
+.modal-btn {
+  background: #222;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #ccc;
+  font-family: monospace;
+  font-size: 14px;
+  padding: 6px 24px;
+  cursor: pointer;
+}
+
+.modal-btn:hover {
+  background: #2a2a3a;
+  border-color: #666;
+}
+
+/* Creature modal */
+.creature-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.creature-modal {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 20px 24px;
+  font-family: monospace;
+  min-width: 240px;
+  max-width: 320px;
+}
+
+.creature-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.creature-modal-emoji {
+  font-size: 36px;
+  line-height: 1;
+}
+
+.creature-modal-name {
+  font-size: 16px;
+  color: #e0e0e0;
+  font-weight: bold;
+}
+
+.creature-modal-species {
+  font-size: 11px;
+  color: #555;
+  margin-top: 2px;
+}
+
+.creature-modal-rename {
+  font-size: 11px;
+  color: #c66;
+  cursor: pointer;
+  margin-left: 8px;
+}
+
+.creature-modal-rename:hover {
+  color: #f88;
+}
+
+.creature-modal-divider {
+  border: none;
+  border-top: 1px solid #222;
+  margin: 10px 0;
+}
+
+.creature-modal-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.creature-modal-row-label {
+  color: #555;
+}
+
+.creature-modal-row-value {
+  color: #ccc;
+}
+
+.drive-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 11px;
+}
+
+.drive-label {
+  color: #555;
+  width: 60px;
+  flex-shrink: 0;
+}
+
+.drive-track {
+  flex: 1;
+  height: 6px;
+  background: #222;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.drive-fill {
+  height: 100%;
+  border-radius: 3px;
+}
+
+.creature-modal-hint {
+  margin-top: 14px;
+  text-align: center;
+  font-size: 11px;
+  color: #444;
+  font-style: italic;
 }
 
 /* Mobile adjustments */

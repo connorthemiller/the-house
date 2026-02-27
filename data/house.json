@@ -5,21 +5,21 @@
       "name": "Bedroom",
       "cols": 6,
       "rows": 5,
-      "color": "#1a1520"
+      "color": "#342a40"
     },
     {
       "id": "living_room",
       "name": "Living Room",
       "cols": 8,
       "rows": 5,
-      "color": "#151a1a"
+      "color": "#2a3434"
     },
     {
       "id": "kitchen",
       "name": "Kitchen",
       "cols": 6,
       "rows": 5,
-      "color": "#1a1815"
+      "color": "#34302a"
     }
   ],
   "doorways": [
