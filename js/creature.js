@@ -13,7 +13,8 @@ const SPEECH_LINES = {
   cuddle: ['cozy', '*purr*', 'warm', 'nice'],
   sleep: ['zzz', 'zzz...', '*snore*'],
   seek_sleep: ['sleepy...', 'bed?', '*yawn*'],
-  seek_comfort: ['cold...', 'hmm', 'need hug']
+  seek_comfort: ['cold...', 'hmm', 'need hug'],
+  react_new: ['ooh!', 'new thing!', 'hm?', 'what!']
 };
 
 function pick(arr) {
@@ -42,7 +43,21 @@ class Creature {
     this.mood = 'okay';
     this.currentAction = null;
     this.speech = null;
-    this.knownObjects = new Set();
+    this.memory = {};
+    // memory[objectId] = {
+    //   name, emoji, interactions, actions: { eat: 2, play: 1, ... },
+    //   lastSeen, valence  // valence: -1 to +1, derived from action history
+    // }
+    this.development = {
+      actionCounts: {},
+      totalActions: 0,
+      modifiers: {
+        hunger:    { growthMod: 0, scoreMod: 0 },
+        curiosity: { growthMod: 0, scoreMod: 0 },
+        comfort:   { growthMod: 0, scoreMod: 0 },
+        energy:    { growthMod: 0, scoreMod: 0 }
+      }
+    };
     this.dragging = false;
     this._dragPixel = null;
 
@@ -52,6 +67,39 @@ class Creature {
 
   start() {
     this._tickId = setInterval(() => this._tick(), 2500);
+
+    // Environmental reactions
+    var self = this;
+    this._onObjectAdded = function(data) {
+      if (self.dragging) return;
+      if (data.object && data.object.room === self.room && Math.random() < 0.4) {
+        self._speak('react_new', data.object);
+      }
+    };
+    this._onDayNightChanged = function(data) {
+      if (self.dragging) return;
+      if (Math.random() < 0.5) {
+        var phase = data.phase;
+        var lines = {
+          dawn: ['morning...', 'bright...', '*blink*'],
+          day: ['sunny', 'warm', 'daytime'],
+          dusk: ['evening...', 'dimming...', 'sunset'],
+          night: ['dark...', 'night...', 'stars?']
+        };
+        if (lines[phase]) {
+          var text = pick(lines[phase]);
+          self.speech = { text: text, expiresAt: Date.now() + 3000 };
+          self.bus.emit('creature:spoke', { text: text });
+          if (self._speechTimer) clearTimeout(self._speechTimer);
+          self._speechTimer = setTimeout(function() {
+            self.speech = null;
+            self.bus.emit('creature:spoke', { text: null });
+          }, 3000);
+        }
+      }
+    };
+    this.bus.on('world:object-added', this._onObjectAdded);
+    this.bus.on('daynight:changed', this._onDayNightChanged);
   }
 
   stop() {
@@ -62,6 +110,12 @@ class Creature {
     if (this._speechTimer) {
       clearTimeout(this._speechTimer);
       this._speechTimer = null;
+    }
+    if (this._onObjectAdded) {
+      this.bus.off('world:object-added', this._onObjectAdded);
+    }
+    if (this._onDayNightChanged) {
+      this.bus.off('daynight:changed', this._onDayNightChanged);
     }
   }
 
@@ -94,10 +148,11 @@ class Creature {
   }
 
   _updateDrives() {
-    this.drives.hunger = Math.min(1, this.drives.hunger + this.driveConfig.hunger.growthRate);
-    this.drives.curiosity = Math.min(1, this.drives.curiosity + this.driveConfig.curiosity.growthRate);
-    this.drives.comfort = Math.min(1, this.drives.comfort + this.driveConfig.comfort.growthRate);
-    this.drives.energy = Math.min(1, this.drives.energy + this.driveConfig.energy.growthRate);
+    var dm = this.development.modifiers;
+    this.drives.hunger = Math.min(1, this.drives.hunger + this.driveConfig.hunger.growthRate + dm.hunger.growthMod);
+    this.drives.curiosity = Math.min(1, this.drives.curiosity + this.driveConfig.curiosity.growthRate + dm.curiosity.growthMod);
+    this.drives.comfort = Math.min(1, this.drives.comfort + this.driveConfig.comfort.growthRate + dm.comfort.growthMod);
+    this.drives.energy = Math.min(1, this.drives.energy + this.driveConfig.energy.growthRate + dm.energy.growthMod);
 
     // Passive comfort soothing: adjacent high-comfort objects reduce comfort drive
     if (!this.dragging) {
@@ -161,7 +216,8 @@ class Creature {
     // Novel objects in current room
     var novelObjects = [];
     for (var i = 0; i < roomObjects.length; i++) {
-      if (!this.knownObjects.has(roomObjects[i].id)) {
+      var memEntry = this.memory[roomObjects[i].id];
+      if (!memEntry || memEntry.interactions === 0) {
         novelObjects.push(roomObjects[i]);
       }
     }
@@ -244,7 +300,8 @@ class Creature {
 
     // eat: hunger>0.3 AND adjacent to food
     if (this.drives.hunger > 0.3 && perception.adjacentFood.length > 0) {
-      candidates.push({ action: 'eat', target: perception.adjacentFood[0],
+      var eatTarget = this._preferredTarget(perception.adjacentFood) || perception.adjacentFood[0];
+      candidates.push({ action: 'eat', target: eatTarget,
         score: this.drives.hunger * 2.0 + noise() });
     }
 
@@ -264,13 +321,15 @@ class Creature {
 
     // play: curiosity>0.3 AND adjacent to toy
     if (this.drives.curiosity > 0.3 && perception.toys.length > 0) {
-      candidates.push({ action: 'play', target: perception.toys[0],
+      var playTarget = this._preferredTarget(perception.toys) || perception.toys[0];
+      candidates.push({ action: 'play', target: playTarget,
         score: this.drives.curiosity * 1.0 + noise() });
     }
 
     // cuddle: comfort>0.4 AND adjacent to comfort object
     if (this.drives.comfort > 0.4 && perception.adjacentComfort.length > 0) {
-      candidates.push({ action: 'cuddle', target: perception.adjacentComfort[0],
+      var cuddleTarget = this._preferredTarget(perception.adjacentComfort) || perception.adjacentComfort[0];
+      candidates.push({ action: 'cuddle', target: cuddleTarget,
         score: this.drives.comfort * 1.3 + noise() });
     }
 
@@ -283,7 +342,8 @@ class Creature {
 
     // sleep: energy>0.6 AND adjacent to sleepable
     if (this.drives.energy > 0.6 && perception.adjacentSleepable.length > 0) {
-      candidates.push({ action: 'sleep', target: perception.adjacentSleepable[0],
+      var sleepTarget = this._preferredTarget(perception.adjacentSleepable) || perception.adjacentSleepable[0];
+      candidates.push({ action: 'sleep', target: sleepTarget,
         score: this.drives.energy * 2.0 + noise() });
     }
 
@@ -307,6 +367,20 @@ class Creature {
     var restScore = (this.drives.hunger < 0.4 && this.drives.curiosity < 0.5 &&
       this.drives.comfort < 0.4 && this.drives.energy < 0.4) ? 0.4 : 0.1;
     candidates.push({ action: 'rest', target: null, score: restScore + noise() });
+
+    // Apply valence multiplier from memory + development score modifier
+    var mem = this.memory;
+    var devMods = this.development.modifiers;
+    for (var i = 0; i < candidates.length; i++) {
+      var c = candidates[i];
+      if (c.target && c.target.id && mem[c.target.id]) {
+        c.score *= (1 + mem[c.target.id].valence * 0.2);
+      }
+      var drive = this._actionToDrive(c.action);
+      if (drive && devMods[drive]) {
+        c.score *= (1 + devMods[drive].scoreMod);
+      }
+    }
 
     // Pick highest score
     candidates.sort(function(a, b) { return b.score - a.score; });
@@ -344,10 +418,12 @@ class Creature {
 
   _doEat(act) {
     if (act.turnsRemaining > 0) {
-      this._speak('eat');
+      this._speak('eat', act.target);
       act.turnsRemaining--;
       if (act.turnsRemaining === 0) {
         this.drives.hunger = Math.max(0, this.drives.hunger - 0.35);
+        this._recordInteraction(act.target, 'eat');
+        this._updateDevelopment('eat');
         // Remove consumable user-placed food; default food_bowl is permanent
         if (act.target && act.target.userPlaced && act.target.consumable) {
           this.world.removeObject(act.target.id);
@@ -377,7 +453,7 @@ class Creature {
     } else {
       this._moveTowardRoom(food.inRoom);
     }
-    this._speak('seek_food');
+    this._speak('seek_food', act.target);
   }
 
   _doInvestigate(act) {
@@ -388,10 +464,11 @@ class Creature {
     if (dist > 1) {
       this._moveToward(obj.col, obj.row);
     } else if (act.turnsRemaining > 0) {
-      this._speak('investigate');
+      this._speak('investigate', act.target);
       act.turnsRemaining--;
       if (act.turnsRemaining === 0) {
-        this.knownObjects.add(obj.id);
+        this._recordInteraction(obj, 'investigate');
+        this._updateDevelopment('investigate');
         var novelty = obj.novelty || 0.5;
         var reduction = 0.15 + novelty * 0.25;
         this.drives.curiosity = Math.max(0, this.drives.curiosity - reduction);
@@ -407,6 +484,7 @@ class Creature {
     var targetRow = Math.floor(Math.random() * room.rows);
     this._moveToward(targetCol, targetRow);
     this._speak('explore_room');
+    this._updateDevelopment('explore_room');
     this.currentAction = null;
   }
 
@@ -426,6 +504,7 @@ class Creature {
       }
     }
     this._speak('wander');
+    this._updateDevelopment('wander');
     this.currentAction = null;
   }
 
@@ -435,6 +514,7 @@ class Creature {
       act.turnsRemaining--;
       if (act.turnsRemaining === 0) {
         this.drives.energy = Math.max(0, this.drives.energy - 0.1);
+        this._updateDevelopment('rest');
         this.currentAction = null;
       }
     }
@@ -587,12 +667,112 @@ class Creature {
     return best;
   }
 
+  // --- Memory ---
+
+  _recordInteraction(target, action) {
+    if (!target || !target.id) return;
+    var entry = this.memory[target.id];
+    if (!entry) {
+      entry = {
+        name: target.name || '',
+        emoji: target.emoji || '',
+        interactions: 0,
+        actions: {},
+        lastSeen: Date.now(),
+        valence: 0
+      };
+      this.memory[target.id] = entry;
+    }
+    entry.interactions++;
+    entry.actions[action] = (entry.actions[action] || 0) + 1;
+    entry.lastSeen = Date.now();
+    entry.name = target.name || entry.name;
+    entry.emoji = target.emoji || entry.emoji;
+    entry.valence = this._computeValence(entry);
+    this.bus.emit('creature:memory-updated', { objectId: target.id, entry: entry });
+  }
+
+  _computeValence(entry) {
+    if (entry.interactions === 0) return 0;
+    var positive = (entry.actions.eat || 0) + (entry.actions.play || 0) +
+      (entry.actions.cuddle || 0) + (entry.actions.sleep || 0);
+    var ratio = positive / entry.interactions;
+    // Shift from [0,1] to [-0.2, 1.0]
+    return ratio * 1.2 - 0.2;
+  }
+
+  _preferredTarget(candidates) {
+    var mem = this.memory;
+    var sorted = candidates.slice().sort(function(a, b) {
+      var va = (mem[a.id] && mem[a.id].valence) || 0;
+      var vb = (mem[b.id] && mem[b.id].valence) || 0;
+      return vb - va;
+    });
+    return sorted[0] || null;
+  }
+
+  // --- Development ---
+
+  _actionToDrive(action) {
+    switch (action) {
+      case 'eat': case 'seek_food': return 'hunger';
+      case 'investigate': case 'explore_room': case 'play': return 'curiosity';
+      case 'cuddle': case 'rest': case 'seek_comfort': return 'comfort';
+      case 'sleep': case 'seek_sleep': return 'energy';
+      default: return null;
+    }
+  }
+
+  _updateDevelopment(action) {
+    this.development.actionCounts[action] = (this.development.actionCounts[action] || 0) + 1;
+    this.development.totalActions++;
+
+    if (this.development.totalActions < 10) return;
+
+    // Count actions per drive category
+    var driveCounts = { hunger: 0, curiosity: 0, comfort: 0, energy: 0 };
+    var actions = Object.keys(this.development.actionCounts);
+    for (var i = 0; i < actions.length; i++) {
+      var drive = this._actionToDrive(actions[i]);
+      if (drive) {
+        driveCounts[drive] += this.development.actionCounts[actions[i]];
+      }
+    }
+
+    var total = this.development.totalActions;
+    var drives = ['hunger', 'curiosity', 'comfort', 'energy'];
+    for (var i = 0; i < drives.length; i++) {
+      var d = drives[i];
+      var ratio = driveCounts[d] / total;
+      var deviation = ratio - 0.25; // expected even = 0.25
+      this.development.modifiers[d].growthMod = deviation * 0.30;
+      this.development.modifiers[d].scoreMod = deviation * 0.15;
+    }
+  }
+
+  _getPersonalityTraits() {
+    if (this.development.totalActions < 20) return [];
+    var traits = [];
+    var mods = this.development.modifiers;
+    if (mods.curiosity.growthMod > 0.02) traits.push('explorer');
+    if (mods.curiosity.growthMod < -0.02) traits.push('homebody');
+    if (mods.hunger.growthMod > 0.02) traits.push('food-motivated');
+    if (mods.hunger.growthMod < -0.02) traits.push('light eater');
+    if (mods.comfort.growthMod > 0.02) traits.push('cuddly');
+    if (mods.comfort.growthMod < -0.02) traits.push('independent');
+    if (mods.energy.growthMod > 0.02) traits.push('nap lover');
+    if (mods.energy.growthMod < -0.02) traits.push('energetic');
+    return traits;
+  }
+
   _doPlay(act) {
     if (act.turnsRemaining > 0) {
-      this._speak('play');
+      this._speak('play', act.target);
       act.turnsRemaining--;
       if (act.turnsRemaining === 0) {
         this.drives.curiosity = Math.max(0, this.drives.curiosity - 0.25);
+        this._recordInteraction(act.target, 'play');
+        this._updateDevelopment('play');
         this.currentAction = null;
       }
     }
@@ -600,10 +780,12 @@ class Creature {
 
   _doCuddle(act) {
     if (act.turnsRemaining > 0) {
-      this._speak('cuddle');
+      this._speak('cuddle', act.target);
       act.turnsRemaining--;
       if (act.turnsRemaining === 0) {
         this.drives.comfort = Math.max(0, this.drives.comfort - 0.35);
+        this._recordInteraction(act.target, 'cuddle');
+        this._updateDevelopment('cuddle');
         this.currentAction = null;
       }
     }
@@ -611,10 +793,12 @@ class Creature {
 
   _doSleep(act) {
     if (act.turnsRemaining > 0) {
-      this._speak('sleep');
+      this._speak('sleep', act.target);
       act.turnsRemaining--;
       if (act.turnsRemaining === 0) {
         this.drives.energy = Math.max(0, this.drives.energy - 0.4);
+        this._recordInteraction(act.target, 'sleep');
+        this._updateDevelopment('sleep');
         this.currentAction = null;
       }
     }
@@ -638,7 +822,7 @@ class Creature {
     } else {
       this._moveTowardRoom(target.inRoom);
     }
-    this._speak('seek_sleep');
+    this._speak('seek_sleep', act.target);
   }
 
   _doSeekComfort(act, perception) {
@@ -659,19 +843,18 @@ class Creature {
     } else {
       this._moveTowardRoom(target.inRoom);
     }
-    this._speak('seek_comfort');
+    this._speak('seek_comfort', act.target);
   }
 
   // --- Speech ---
 
-  _speak(action) {
-    var lines = SPEECH_LINES[action];
-    if (!lines) return;
-
+  _speak(action, target) {
     // Don't spam -- only speak 30% of the time for ambient actions
     if (['wander', 'explore_room', 'rest', 'sleep'].includes(action) && Math.random() > 0.3) return;
 
-    var text = pick(lines);
+    var text = this._generateSpeech(action, target);
+    if (!text) return;
+
     this.speech = { text: text, expiresAt: Date.now() + 3000 };
     this.bus.emit('creature:spoke', { text: text });
 
@@ -681,6 +864,70 @@ class Creature {
       self.speech = null;
       self.bus.emit('creature:spoke', { text: null });
     }, 3000);
+  }
+
+  _generateSpeech(action, target) {
+    var roll = Math.random();
+    var name = target && target.name ? target.name.toLowerCase() : null;
+    var memEntry = target && target.id ? this.memory[target.id] : null;
+
+    // 1. Object-specific (40-50% when target has name)
+    if (name && roll < 0.45) {
+      var objectLines = {
+        eat: ['mmm, ' + name + '!', '*munch* ' + name, name + '!'],
+        investigate: ["what's this " + name + '?', 'hmm, ' + name + '...', 'ooh, ' + name],
+        play: ['wheee, ' + name + '!', '*bat* ' + name, 'fun ' + name + '!'],
+        cuddle: ['cozy ' + name, '*nuzzle* ' + name, 'warm ' + name],
+        sleep: ['zzz on ' + name, '*snore* ' + name],
+        seek_food: [name + '?', 'want ' + name + '...'],
+        seek_sleep: [name + '...', 'find ' + name],
+        seek_comfort: ['need ' + name + '...', name + '?']
+      };
+      if (objectLines[action]) return pick(objectLines[action]);
+    }
+
+    // 2. Preference expression (25% when high valence)
+    if (memEntry && memEntry.valence > 0.5 && memEntry.interactions > 3 && roll < 0.70) {
+      var prefLines = ['love ' + (name || 'this') + '!', 'my ' + (name || 'fav') + '!',
+        (name || 'this') + ' is best'];
+      return pick(prefLines);
+    }
+
+    // 3. Mood-based (15% chance)
+    if (roll < 0.85) {
+      var moodLines = {
+        happy: ['life is good', 'great!', 'yay'],
+        content: ['nice', 'mmm', 'good'],
+        hungry: ['so hungry...', 'need food', 'tummy...'],
+        sleepy: ['so tired...', 'need rest', '*yaaawn*'],
+        uneasy: ['not right', 'hmm...', 'uncomfortable'],
+        restless: ['antsy', 'hmm', 'gotta move']
+      };
+      if (moodLines[this.mood]) return pick(moodLines[this.mood]);
+    }
+
+    // 4. Personality-based (20% when developed enough)
+    if (this.development.totalActions > 30) {
+      var traits = this._getPersonalityTraits();
+      if (traits.length > 0) {
+        var traitLines = {
+          'explorer': ['must explore', 'what else?', 'adventure!'],
+          'food-motivated': ['snack time', 'food...', 'yum?'],
+          'cuddly': ['need hugs', 'cozy time', 'snuggle'],
+          'nap lover': ['sleepy...', 'nap time', 'zzz'],
+          'energetic': ['go go!', 'so much energy!', 'no rest!'],
+          'homebody': ['home sweet home', 'comfy here', 'staying put'],
+          'independent': ['I got this', 'fine alone', 'my way'],
+          'light eater': ['not hungry', 'maybe later', 'full']
+        };
+        var trait = pick(traits);
+        if (traitLines[trait]) return pick(traitLines[trait]);
+      }
+    }
+
+    // 5. Fallback: canned lines
+    var lines = SPEECH_LINES[action];
+    return lines ? pick(lines) : null;
   }
 
   // --- Drag ---
@@ -719,7 +966,8 @@ class Creature {
         energy: this.drives.energy
       },
       mood: this.mood,
-      knownObjects: Array.from(this.knownObjects),
+      memory: this.memory,
+      development: this.development,
       currentAction: this.currentAction
         ? { action: this.currentAction.action, turnsRemaining: this.currentAction.turnsRemaining }
         : null
@@ -742,8 +990,20 @@ class Creature {
         ? saved.drives.energy : this.driveConfig.energy.baseline;
     }
     if (saved.mood) this.mood = saved.mood;
-    if (saved.knownObjects) {
-      this.knownObjects = new Set(saved.knownObjects);
+    if (saved.memory) {
+      this.memory = saved.memory;
+    } else if (saved.knownObjects) {
+      // Migration from old save format
+      for (var i = 0; i < saved.knownObjects.length; i++) {
+        var id = saved.knownObjects[i];
+        this.memory[id] = {
+          name: '', emoji: '', interactions: 1,
+          actions: { investigate: 1 }, lastSeen: Date.now(), valence: -0.2
+        };
+      }
+    }
+    if (saved.development) {
+      this.development = saved.development;
     }
     if (saved.currentAction) {
       this.currentAction = saved.currentAction;

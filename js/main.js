@@ -129,6 +129,7 @@ async function init() {
   bus.on('creature:room-changed', scheduleRender);
   bus.on('creature:picked-up', scheduleRender);
   bus.on('creature:renamed', scheduleRender);
+  bus.on('creature:memory-updated', scheduleRender);
 
   // Nav: switch room in single mode
   bus.on('nav:room-changed', (data) => {

@@ -216,11 +216,13 @@ class UI {
           '<span class="creature-modal-row-label">action</span>' +
           '<span class="creature-modal-row-value">' + actionText + '</span>' +
         '</div>' +
+        this._personalitySection(c) +
         '<hr class="creature-modal-divider">' +
         this._driveBar('hunger', hungerPct, '#c66') +
         this._driveBar('curiosity', curiosityPct, '#6ac') +
         this._driveBar('comfort', comfortPct, '#a6c') +
         this._driveBar('energy', energyPct, '#ca6') +
+        this._favoritesSection(c) +
         '<div class="creature-modal-hint">drag to move</div>' +
       '</div>';
 
@@ -271,6 +273,41 @@ class UI {
 
     document.body.appendChild(overlay);
     this.activePanel = overlay;
+  }
+
+  _personalitySection(creature) {
+    if (!creature._getPersonalityTraits) return '';
+    var traits = creature._getPersonalityTraits();
+    var text = traits.length > 0 ? traits.join(', ') : 'developing...';
+    return '<div class="creature-modal-row creature-modal-personality">' +
+      '<span class="creature-modal-row-label">personality</span>' +
+      '<span class="creature-modal-row-value">' + text + '</span>' +
+    '</div>';
+  }
+
+  _favoritesSection(creature) {
+    if (!creature.memory) return '';
+    var favs = [];
+    var ids = Object.keys(creature.memory);
+    for (var i = 0; i < ids.length; i++) {
+      var entry = creature.memory[ids[i]];
+      if (entry.valence > 0.2 && entry.interactions > 2) {
+        favs.push(entry);
+      }
+    }
+    if (favs.length === 0) return '';
+    // Sort by valence descending, take top 3
+    favs.sort(function(a, b) { return b.valence - a.valence; });
+    favs = favs.slice(0, 3);
+    var html = '<hr class="creature-modal-divider">' +
+      '<div class="creature-modal-fav-label">favorites</div>' +
+      '<div class="creature-modal-fav">';
+    for (var i = 0; i < favs.length; i++) {
+      html += '<span class="creature-modal-fav-item">' +
+        favs[i].emoji + ' ' + favs[i].name + '</span>';
+    }
+    html += '</div>';
+    return html;
   }
 
   _driveBar(label, pct, color) {

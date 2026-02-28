@@ -376,6 +376,32 @@ canvas {
   border-radius: 3px;
 }
 
+.creature-modal-personality .creature-modal-row-value {
+  color: #a8a;
+  font-style: italic;
+}
+
+.creature-modal-fav-label {
+  font-size: 11px;
+  color: #555;
+  margin-bottom: 4px;
+}
+
+.creature-modal-fav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.creature-modal-fav-item {
+  font-size: 12px;
+  color: #ccc;
+  background: #222;
+  padding: 2px 8px;
+  border-radius: 3px;
+}
+
 .creature-modal-hint {
   margin-top: 14px;
   text-align: center;
