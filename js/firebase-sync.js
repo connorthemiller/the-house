@@ -58,7 +58,7 @@ function createPuppet(data) {
     col: data.col || 0,
     row: data.row || 0,
     mood: data.mood || 'okay',
-    currentAction: data.action || null,
+    currentAction: data.action ? { action: data.action } : null,
     actionTarget: null,
     dragging: data.dragging || false,
     _dragPixel: (data.dragX != null && data.dragY != null) ? { x: data.dragX, y: data.dragY } : null,
@@ -89,7 +89,7 @@ function updatePuppet(puppet, data) {
   n = _num(data.col, 0, 20); if (n != null) puppet.col = n;
   n = _num(data.row, 0, 20); if (n != null) puppet.row = n;
   s = _str(data.mood, 16); if (s != null) puppet.mood = s;
-  s = _str(data.action, 32); if (s != null) puppet.currentAction = s;
+  s = _str(data.action, 32); puppet.currentAction = s ? { action: s } : null;
   puppet.dragging = !!data.dragging;
   if (data.dragX != null && data.dragY != null) {
     puppet._dragPixel = { x: data.dragX, y: data.dragY };
@@ -212,7 +212,7 @@ function _creatureSnapshot(creature, roomId) {
     col: creature.col,
     row: creature.row,
     mood: creature.mood || 'okay',
-    action: creature.currentAction || null,
+    action: (creature.currentAction && creature.currentAction.action) || null,
     dragging: !!creature.dragging,
     dragX: (creature._dragPixel && creature._dragPixel.x) || null,
     dragY: (creature._dragPixel && creature._dragPixel.y) || null,
