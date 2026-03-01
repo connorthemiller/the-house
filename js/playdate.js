@@ -36,12 +36,24 @@ function encodeCreaturePacket(creature) {
     packet.fm = creature.friendMemory;
   }
   var json = JSON.stringify(packet);
-  return btoa(json);
+  // UTF-8 safe base64 encoding (handles emoji)
+  var bytes = new TextEncoder().encode(json);
+  var binary = '';
+  for (var i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
 }
 
 function decodeCreaturePacket(base64Str) {
   try {
-    var json = atob(base64Str);
+    // UTF-8 safe base64 decoding (handles emoji)
+    var binary = atob(base64Str);
+    var bytes = new Uint8Array(binary.length);
+    for (var i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    var json = new TextDecoder().decode(bytes);
     var p = JSON.parse(json);
     if (p.v !== 1) return null;
 
