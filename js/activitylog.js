@@ -15,7 +15,8 @@ var COLORS = {
   care:        '#6cc',
   environment: '#68c',
   creature:    '#cc8',
-  social:      '#8c6'
+  social:      '#8c6',
+  reflection:  '#ca8'
 };
 
 function pad2(n) { return n < 10 ? '0' + n : '' + n; }
@@ -47,6 +48,7 @@ class ActivityLog {
     this._onPickedUp = this._onPickedUp.bind(this);
     this._onDropped = this._onDropped.bind(this);
     this._onFriendInteraction = this._onFriendInteraction.bind(this);
+    this._onReflection = this._onReflection.bind(this);
   }
 
   start() {
@@ -68,6 +70,7 @@ class ActivityLog {
     this.bus.on('creature:picked-up', this._onPickedUp);
     this.bus.on('creature:dropped', this._onDropped);
     this.bus.on('creature:friend-interaction', this._onFriendInteraction);
+    this.bus.on('creature:reflected', this._onReflection);
   }
 
   _toggle() {
@@ -141,6 +144,15 @@ class ActivityLog {
   _onFriendInteraction(data) {
     var action = data.action.replace(/_/g, ' ');
     this._addEntry('social', action + ' with ' + data.entry.name);
+  }
+
+  _onReflection(data) {
+    if (data.error) {
+      this._addEntry('reflection', 'reflection failed');
+    } else if (data.narrative) {
+      var text = data.narrative.length > 60 ? data.narrative.slice(0, 57) + '...' : data.narrative;
+      this._addEntry('reflection', text);
+    }
   }
 }
 

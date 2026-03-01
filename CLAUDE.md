@@ -4,7 +4,7 @@ Digital creature habitat. Vanilla JS + Canvas, no build step, ES modules. A lobs
 
 ## Current State
 
-Phases 0-3 complete + gap-fill sprint + mobile-first UI rework + social playdates + Firebase real-time sync. Equal room sizes (all 6x5), drives HUD and care buttons on main view (below canvas), creature modal is inspection-only. Playdate system: real-time Firebase sync (primary) with async URL fallback. 3 locations (park/cafe/mountains), 4 social actions. Next up: Phase 4 (LLM reflective layer).
+Phases 0-4 complete. Equal room sizes (all 6x5), drives HUD and care buttons on main view (below canvas), creature modal with inspection + journal + interests. Playdate system: real-time Firebase sync (primary) with async URL fallback. 3 locations (park/cafe/mountains), 4 social actions. Phase 4: LLM reflective layer -- periodic reflections via BYO API key (Anthropic/OpenAI), interests, associations, journal. Settings panel bottom-left.
 
 ## File Map
 
@@ -27,6 +27,9 @@ js/creature.js          Creature class (hub, imports creature/ modules)
   creature/memory.js       object memory, valence, familiarity/habituation
   creature/development.js  action counts, personality modifiers
   creature/speech.js       context-aware speech generation
+  creature/reflection.js   LLM reflection triggers, snapshot, prompt, response parsing
+js/llm.js               provider abstraction (Anthropic/OpenAI), fetch, token tracking
+js/settings.js          settings panel UI (API key, provider, model, interval, usage)
 js/playdate.js          packet encode/decode, URL parsing, guest factory, link gen (async fallback)
 js/firebase-config.js   Firebase app init, db ref export, connection check with timeout
 js/firebase-sync.js     session CRUD, puppet factory, sync write/read, disconnect handling
@@ -65,6 +68,7 @@ creature:cared          { action, driveAffected, amount }
 object:dragging         { x, y }
 input:guest-tapped      { creature, roomId, col, row }
 creature:friend-interaction { friendKey, action, entry }
+creature:reflected      { narrative, associationCount, interestCount, speech }
 ```
 
 ## Creature State Shape
@@ -78,6 +82,11 @@ creature.friendMemory -- { [name_species]: { name, species, emoji, playdates, to
 creature.companion -- reference to another Creature (null at home, set during playdate)
 creature.room / creature.col / creature.row -- position
 creature.currentAction / creature.actionTarget -- what it's doing now
+creature.interests  -- { [topic]: { strength, reason, createdAt } }
+creature.reflections -- [{ text, timestamp }], max 20
+creature.roomAssociations -- { [roomId]: valence }
+creature.lastReflectionTime -- timestamp of last reflection
+creature.eventsSinceReflection -- counter, resets after reflection
 ```
 
 ## Conventions

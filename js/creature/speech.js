@@ -138,6 +138,7 @@ export var methods = {
       }
     };
     this._onDayNightChanged = function(data) {
+      self._dayPhase = data.phase;
       if (self.dragging) return;
       if (Math.random() < 0.5) {
         var phase = data.phase;

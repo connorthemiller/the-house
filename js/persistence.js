@@ -26,6 +26,7 @@ class Persistence {
     this.bus.on('creature:action-started', this._onCreatureChanged);
     this.bus.on('creature:dropped', this._onCreatureChanged);
     this.bus.on('creature:renamed', this._onCreatureChanged);
+    this.bus.on('creature:reflected', this._onCreatureChanged);
   }
 
   stop() {
@@ -35,6 +36,7 @@ class Persistence {
     this.bus.off('creature:action-started', this._onCreatureChanged);
     this.bus.off('creature:dropped', this._onCreatureChanged);
     this.bus.off('creature:renamed', this._onCreatureChanged);
+    this.bus.off('creature:reflected', this._onCreatureChanged);
     if (this._creatureSaveTimer) {
       clearTimeout(this._creatureSaveTimer);
       this._creatureSaveTimer = null;

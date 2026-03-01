@@ -136,6 +136,22 @@ export var methods = {
       }
     }
 
+    // Interest-based score modifier
+    var interests = this.interests || {};
+    var intKeys = Object.keys(interests);
+    if (intKeys.length > 0) {
+      for (var i = 0; i < candidates.length; i++) {
+        var c = candidates[i];
+        var label = c.action + (c.target && c.target.name ? ' ' + c.target.name.toLowerCase() : '') +
+          (c.target && c.target.type ? ' ' + c.target.type : '') + ' ' + (this.room || '');
+        for (var j = 0; j < intKeys.length; j++) {
+          if (label.indexOf(intKeys[j]) !== -1) {
+            c.score *= (1 + interests[intKeys[j]].strength);
+          }
+        }
+      }
+    }
+
     // Pick highest score
     candidates.sort(function(a, b) { return b.score - a.score; });
     var winner = candidates[0];
@@ -150,5 +166,7 @@ export var methods = {
     };
 
     this.bus.emit('creature:action-started', { action: winner.action, target: winner.target });
+    this._recordReflectionEvent();
+    this._recordRecentAction(winner.action, winner.target);
   }
 };

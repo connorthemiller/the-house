@@ -9,6 +9,7 @@ import UI from './ui.js';
 import Persistence from './persistence.js';
 import Creature from './creature.js';
 import ActivityLog from './activitylog.js';
+import Settings from './settings.js';
 import { parsePlaydateHash, createGuestCreature, savePlaydateResult, generatePlaydateLink } from './playdate.js';
 import { initFirebase, isFirebaseAvailable } from './firebase-config.js';
 import {
@@ -110,6 +111,9 @@ async function initHome() {
   const activityLog = new ActivityLog(bus);
   activityLog.start();
 
+  const settings = new Settings();
+  settings.start();
+
   creature.start();
 
   const scheduleRender = () => {
@@ -134,6 +138,7 @@ async function initHome() {
   bus.on('creature:memory-updated', scheduleRender);
   bus.on('creature:cared', scheduleRender);
   bus.on('creature:mood-changed', scheduleRender);
+  bus.on('creature:reflected', scheduleRender);
 
   bus.on('nav:room-changed', (data) => {
     renderer.setCurrentRoom(data.roomId);

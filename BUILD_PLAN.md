@@ -162,6 +162,8 @@ Incremental phases. Each phase produces something testable. No phase depends on 
 
 **Done when:** The creature surprises you. It forms an association you didn't expect. It says something you didn't program. It develops an interest that emerges from its accumulated experience rather than from its initial configuration. The Surprise Test has a real chance of passing.
 
+**Status: COMPLETE.** BYO API key (Anthropic/OpenAI) via settings panel. Provider abstraction in js/llm.js. Reflection system in js/creature/reflection.js with timer/accumulation/significant-event triggers. Interests bias action scoring. Journal + interests in creature modal. Gold reflection entries in activity log.
+
 ---
 
 ## Phase 5: Polish and Persistence
@@ -204,7 +206,7 @@ Phase 1: The Creature Moves       (fast loop, minimal drives, movement)    DONE
 Phase 2: Drives, Affect, and Care (full emotional system, caregiver)       DONE
 Phase 3: Memory and Habituation   (past matters, personality forms)        DONE
 Phase 3.5: Social Playdates       (Firebase real-time + async fallback)    DONE
-Phase 4: The Reflective Layer     (BYO API key, LLM reflection)           NEXT
+Phase 4: The Reflective Layer     (BYO API key, LLM reflection)           DONE
 Phase 5: Polish and Persistence   (it feels alive across sessions)
 Phase 6: The Caregiver Effect     (the experiment that validates everything)
 ```

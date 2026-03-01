@@ -237,6 +237,8 @@ class UI {
           this._driveBar('energy', energyPct, '#ca6') +
         '</div>' +
         this._favoritesSection(c) +
+        this._interestsSection(c) +
+        this._journalSection(c) +
         '<div class="creature-modal-hint">drag to move</div>' +
       '</div>';
 
@@ -376,6 +378,49 @@ class UI {
     for (var i = 0; i < favs.length; i++) {
       html += '<span class="creature-modal-fav-item">' +
         esc(favs[i].emoji + ' ' + favs[i].name) + '</span>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  _interestsSection(creature) {
+    if (!creature.interests) return '';
+    var keys = Object.keys(creature.interests);
+    if (keys.length === 0) return '';
+    // Sort by strength descending
+    keys.sort(function(a, b) {
+      return creature.interests[b].strength - creature.interests[a].strength;
+    });
+    var html = '<hr class="creature-modal-divider">' +
+      '<div class="creature-modal-fav-label">interests</div>' +
+      '<div class="creature-modal-interests">';
+    for (var i = 0; i < keys.length; i++) {
+      var int = creature.interests[keys[i]];
+      var pct = Math.round(int.strength * 100);
+      html += '<span class="creature-modal-interest-item">' +
+        esc(keys[i]) + ' <span class="interest-strength">' + pct + '%</span></span>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  _journalSection(creature) {
+    if (!creature.reflections || creature.reflections.length === 0) return '';
+    // Show most recent 3
+    var recent = creature.reflections.slice(-3).reverse();
+    var html = '<hr class="creature-modal-divider">' +
+      '<div class="creature-modal-fav-label">journal</div>' +
+      '<div class="creature-modal-journal">';
+    for (var i = 0; i < recent.length; i++) {
+      var r = recent[i];
+      var text = r.text.length > 80 ? r.text.slice(0, 77) + '...' : r.text;
+      var time = new Date(r.timestamp);
+      var timeStr = (time.getHours() < 10 ? '0' : '') + time.getHours() + ':' +
+        (time.getMinutes() < 10 ? '0' : '') + time.getMinutes();
+      html += '<div class="journal-entry">' +
+        '<span class="journal-time">' + esc(timeStr) + '</span>' +
+        '<span class="journal-text">' + esc(text) + '</span>' +
+      '</div>';
     }
     html += '</div>';
     return html;

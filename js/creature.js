@@ -8,6 +8,7 @@ import { methods as perceptionMethods } from './creature/perception.js';
 import { methods as speechMethods } from './creature/speech.js';
 import { methods as actionsMethods } from './creature/actions.js';
 import { methods as behaviorsMethods } from './creature/behaviors.js';
+import { methods as reflectionMethods } from './creature/reflection.js';
 
 class Creature {
   constructor(bus, world, config) {
@@ -47,11 +48,23 @@ class Creature {
     this.dragging = false;
     this._dragPixel = null;
 
+    // Reflection state
+    this.interests = {};
+    this.reflections = [];
+    this.roomAssociations = {};
+    this.lastReflectionTime = 0;
+    this.eventsSinceReflection = 0;
+    this._recentActions = [];
+    this._reflectionInProgress = false;
+    this._driveHighsSinceReflection = {};
+    this._dayPhase = 'day';
+
     this._tickId = null;
     this._speechTimer = null;
   }
 
   start() {
+    this._initReflection();
     this._tickId = setInterval(() => this._tick(), 2500);
     this._setupEnvReactions();
   }
@@ -83,10 +96,12 @@ class Creature {
     this.mood = this._deriveMood();
     if (this.mood !== prevMood) {
       this.bus.emit('creature:mood-changed', { prev: prevMood, next: this.mood });
+      this._recordReflectionEvent();
     }
     var perception = this._perceive();
     this._selectAction(perception);
     this._executeAction(perception);
+    this._checkReflectionTrigger();
   }
 
   // --- Drag ---
@@ -126,6 +141,7 @@ class Creature {
     this.drives[cfg.drive] = Math.max(0, this.drives[cfg.drive] - amount);
     this._speakCare(action, low);
     this.bus.emit('creature:cared', { action: action, driveAffected: cfg.drive, amount: amount });
+    this._recordReflectionEvent();
   }
 
   // --- Persistence ---
@@ -148,7 +164,12 @@ class Creature {
       development: this.development,
       currentAction: this.currentAction
         ? { action: this.currentAction.action, turnsRemaining: this.currentAction.turnsRemaining }
-        : null
+        : null,
+      interests: this.interests,
+      reflections: this.reflections,
+      roomAssociations: this.roomAssociations,
+      lastReflectionTime: this.lastReflectionTime,
+      eventsSinceReflection: this.eventsSinceReflection
     };
   }
 
@@ -198,13 +219,18 @@ class Creature {
     if (saved.currentAction) {
       this.currentAction = saved.currentAction;
     }
+    if (saved.interests) this.interests = saved.interests;
+    if (saved.reflections) this.reflections = saved.reflections;
+    if (saved.roomAssociations) this.roomAssociations = saved.roomAssociations;
+    if (saved.lastReflectionTime) this.lastReflectionTime = saved.lastReflectionTime;
+    if (saved.eventsSinceReflection) this.eventsSinceReflection = saved.eventsSinceReflection;
   }
 }
 
 Object.assign(Creature.prototype,
   memoryMethods, developmentMethods, drivesMethods,
   movementMethods, perceptionMethods, speechMethods,
-  actionsMethods, behaviorsMethods
+  actionsMethods, behaviorsMethods, reflectionMethods
 );
 
 export default Creature;
