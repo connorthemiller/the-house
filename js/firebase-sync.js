@@ -86,6 +86,13 @@ function updatePuppet(puppet, data) {
   } else {
     puppet.speech = null;
   }
+  // Drives
+  if (data.drives) {
+    puppet.drives.hunger = data.drives.hunger || 0;
+    puppet.drives.curiosity = data.drives.curiosity || 0;
+    puppet.drives.comfort = data.drives.comfort || 0;
+    puppet.drives.energy = data.drives.energy || 0;
+  }
 }
 
 // --- Session CRUD ---
@@ -194,7 +201,13 @@ function _creatureSnapshot(creature, roomId) {
     dragX: (creature._dragPixel && creature._dragPixel.x) || null,
     dragY: (creature._dragPixel && creature._dragPixel.y) || null,
     speech: (creature.speech && creature.speech.text) || null,
-    speechExpires: (creature.speech && creature.speech.expiresAt) || null
+    speechExpires: (creature.speech && creature.speech.expiresAt) || null,
+    drives: creature.drives ? {
+      hunger: Math.round(creature.drives.hunger * 1000) / 1000,
+      curiosity: Math.round(creature.drives.curiosity * 1000) / 1000,
+      comfort: Math.round(creature.drives.comfort * 1000) / 1000,
+      energy: Math.round(creature.drives.energy * 1000) / 1000
+    } : null
   };
   return snap;
 }
