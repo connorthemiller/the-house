@@ -477,8 +477,10 @@ async function startRealtimePlaydate(creature, locationId) {
 
     closeBtn.onclick = function() {
       sessionModal.style.display = 'none';
-      // Navigate into the playdate
-      initRealtimePlaydate(code, locationId, true);
+      // Reload with host hash so init() picks it up cleanly
+      // (avoids double-init -- initHome already ran on this page)
+      window.location.hash = 'hosting=' + code + '&location=' + locationId;
+      window.location.reload();
     };
   } catch (err) {
     console.error('Failed to create session:', err);
@@ -761,27 +763,50 @@ async function initRealtimePlaydate(sessionCode, locationId, isHost) {
 
 // --- Init ---
 
+function parseHash() {
+  var hash = window.location.hash;
+  if (!hash || hash.length < 2) return {};
+  var params = {};
+  var parts = hash.slice(1).split('&');
+  for (var i = 0; i < parts.length; i++) {
+    var eq = parts[i].indexOf('=');
+    if (eq === -1) continue;
+    params[parts[i].slice(0, eq)] = parts[i].slice(eq + 1);
+  }
+  return params;
+}
+
 async function init() {
   // Try initializing Firebase early (non-blocking for home mode)
   var firebaseReady = initFirebase(5000);
 
-  // Check for session join hash first
-  var hash = window.location.hash;
-  if (hash && hash.indexOf('#session=') === 0) {
-    var sessionCode = hash.split('=')[1];
-    if (sessionCode) {
-      await firebaseReady;
-      if (isFirebaseAvailable()) {
-        await handleSessionJoin(sessionCode);
-        return;
-      } else {
-        // Firebase unavailable, can't join session
-        console.warn('Cannot join session -- Firebase unavailable');
-        window.location.hash = '';
-      }
+  var params = parseHash();
+
+  // Host re-entering their own session after page reload
+  if (params.hosting && params.location) {
+    await firebaseReady;
+    if (isFirebaseAvailable()) {
+      await initRealtimePlaydate(params.hosting, params.location, true);
+      return;
+    } else {
+      console.warn('Cannot host session -- Firebase unavailable');
+      window.location.hash = '';
     }
   }
 
+  // Guest joining a session via link
+  if (params.session) {
+    await firebaseReady;
+    if (isFirebaseAvailable()) {
+      await handleSessionJoin(params.session);
+      return;
+    } else {
+      console.warn('Cannot join session -- Firebase unavailable');
+      window.location.hash = '';
+    }
+  }
+
+  // Async playdate fallback (old URL format)
   var playdateInfo = parsePlaydateHash();
   if (playdateInfo) {
     await initPlaydate(playdateInfo);
