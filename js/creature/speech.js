@@ -17,6 +17,13 @@ var SPEECH_LINES = {
   react_new: ['ooh!', 'new thing!', 'hm?', 'what!']
 };
 
+var CARE_SPEECH = {
+  feed:  { normal: ['mmm!', 'yum!', 'tasty!'], low: ['not hungry', 'full...', 'no thanks'] },
+  pet:   { normal: ['nice...', '*purr*', 'ahhh'], low: ['ok ok', 'heh', 'enough'] },
+  play:  { normal: ['fun!', 'wheee', 'yay!'], low: ['tired...', 'maybe later', 'meh'] },
+  rest:  { normal: ['zzz', 'cozy', 'ahhh'], low: ['wide awake', 'not sleepy', 'nah'] }
+};
+
 function pick(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
@@ -102,6 +109,20 @@ export var methods = {
     // 5. Fallback: canned lines
     var lines = SPEECH_LINES[action];
     return lines ? pick(lines) : null;
+  },
+
+  _speakCare: function(action, low) {
+    var lines = CARE_SPEECH[action];
+    if (!lines) return;
+    var text = pick(low ? lines.low : lines.normal);
+    this.speech = { text: text, expiresAt: Date.now() + 3000 };
+    this.bus.emit('creature:spoke', { text: text });
+    if (this._speechTimer) clearTimeout(this._speechTimer);
+    var self = this;
+    this._speechTimer = setTimeout(function() {
+      self.speech = null;
+      self.bus.emit('creature:spoke', { text: null });
+    }, 3000);
   },
 
   _setupEnvReactions: function() {

@@ -11,7 +11,8 @@ export var methods = {
         interactions: 0,
         actions: {},
         lastSeen: Date.now(),
-        valence: 0
+        valence: 0,
+        familiarity: 0
       };
       this.memory[target.id] = entry;
     }
@@ -20,8 +21,25 @@ export var methods = {
     entry.lastSeen = Date.now();
     entry.name = target.name || entry.name;
     entry.emoji = target.emoji || entry.emoji;
+    entry.familiarity = Math.min(1.0, (entry.familiarity || 0) + 0.2);
     entry.valence = this._computeValence(entry);
     this.bus.emit('creature:memory-updated', { objectId: target.id, entry: entry });
+  },
+
+  _decayFamiliarity: function() {
+    var now = Date.now();
+    var ids = Object.keys(this.memory);
+    for (var i = 0; i < ids.length; i++) {
+      var entry = this.memory[ids[i]];
+      if (entry.familiarity > 0) {
+        // Lose 0.1 per 10 minutes since lastSeen
+        var minutesAway = (now - entry.lastSeen) / 60000;
+        var decay = Math.floor(minutesAway / 10) * 0.1;
+        if (decay > 0) {
+          entry.familiarity = Math.max(0, entry.familiarity - decay);
+        }
+      }
+    }
   },
 
   _computeValence: function(entry) {

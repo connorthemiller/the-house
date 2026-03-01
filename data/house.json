@@ -10,7 +10,7 @@
     {
       "id": "living_room",
       "name": "Living Room",
-      "cols": 8,
+      "cols": 6,
       "rows": 5,
       "color": "#2a3434"
     },
@@ -34,7 +34,7 @@
     {
       "from": "living_room",
       "to": "kitchen",
-      "fromCol": 7,
+      "fromCol": 5,
       "fromRow": 2,
       "toCol": 0,
       "toRow": 2

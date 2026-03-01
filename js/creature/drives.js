@@ -3,10 +3,10 @@
 export var methods = {
   _updateDrives: function() {
     var dm = this.development.modifiers;
-    this.drives.hunger = Math.min(1, this.drives.hunger + this.driveConfig.hunger.growthRate + dm.hunger.growthMod);
-    this.drives.curiosity = Math.min(1, this.drives.curiosity + this.driveConfig.curiosity.growthRate + dm.curiosity.growthMod);
-    this.drives.comfort = Math.min(1, this.drives.comfort + this.driveConfig.comfort.growthRate + dm.comfort.growthMod);
-    this.drives.energy = Math.min(1, this.drives.energy + this.driveConfig.energy.growthRate + dm.energy.growthMod);
+    this.drives.hunger = Math.max(0, Math.min(1, this.drives.hunger + this.driveConfig.hunger.growthRate + dm.hunger.growthMod));
+    this.drives.curiosity = Math.max(0, Math.min(1, this.drives.curiosity + this.driveConfig.curiosity.growthRate + dm.curiosity.growthMod));
+    this.drives.comfort = Math.max(0, Math.min(1, this.drives.comfort + this.driveConfig.comfort.growthRate + dm.comfort.growthMod));
+    this.drives.energy = Math.max(0, Math.min(1, this.drives.energy + this.driveConfig.energy.growthRate + dm.energy.growthMod));
 
     // Passive comfort soothing: adjacent high-comfort objects reduce comfort drive
     if (!this.dragging) {

@@ -76,7 +76,12 @@ class Creature {
     }
 
     this._updateDrives();
+    this._decayFamiliarity();
+    var prevMood = this.mood;
     this.mood = this._deriveMood();
+    if (this.mood !== prevMood) {
+      this.bus.emit('creature:mood-changed', { prev: prevMood, next: this.mood });
+    }
     var perception = this._perceive();
     this._selectAction(perception);
     this._executeAction(perception);
@@ -101,6 +106,24 @@ class Creature {
     this.currentAction = null;
     this._speak('dropped');
     this.bus.emit('creature:dropped', { room: room, col: col, row: row });
+  }
+
+  // --- Care ---
+
+  receiveCare(action) {
+    var CARE = {
+      feed:  { drive: 'hunger',    full: 0.3, half: 0.15 },
+      pet:   { drive: 'comfort',   full: 0.25, half: 0.12 },
+      play:  { drive: 'curiosity', full: 0.2, half: 0.1 },
+      rest:  { drive: 'energy',    full: 0.15, half: 0.07 }
+    };
+    var cfg = CARE[action];
+    if (!cfg) return;
+    var low = this.drives[cfg.drive] < 0.2;
+    var amount = low ? cfg.half : cfg.full;
+    this.drives[cfg.drive] = Math.max(0, this.drives[cfg.drive] - amount);
+    this._speakCare(action, low);
+    this.bus.emit('creature:cared', { action: action, driveAffected: cfg.drive, amount: amount });
   }
 
   // --- Persistence ---
@@ -144,13 +167,22 @@ class Creature {
     if (saved.mood) this.mood = saved.mood;
     if (saved.memory) {
       this.memory = saved.memory;
+      // Migration: add familiarity to old entries that lack it
+      var ids = Object.keys(this.memory);
+      for (var i = 0; i < ids.length; i++) {
+        var entry = this.memory[ids[i]];
+        if (entry.familiarity == null) {
+          entry.familiarity = Math.min(1.0, entry.interactions * 0.2);
+        }
+      }
     } else if (saved.knownObjects) {
       // Migration from old save format
       for (var i = 0; i < saved.knownObjects.length; i++) {
         var id = saved.knownObjects[i];
         this.memory[id] = {
           name: '', emoji: '', interactions: 1,
-          actions: { investigate: 1 }, lastSeen: Date.now(), valence: -0.2
+          actions: { investigate: 1 }, lastSeen: Date.now(), valence: -0.2,
+          familiarity: 0.2
         };
       }
     }

@@ -74,7 +74,8 @@ export var methods = {
         this._recordInteraction(obj, 'investigate');
         this._updateDevelopment('investigate');
         var novelty = obj.novelty || 0.5;
-        var reduction = 0.15 + novelty * 0.25;
+        var familiarity = (this.memory[obj.id] && this.memory[obj.id].familiarity) || 0;
+        var reduction = (0.15 + novelty * 0.25) * (1 - familiarity);
         this.drives.curiosity = Math.max(0, this.drives.curiosity - reduction);
         this.currentAction = null;
       }

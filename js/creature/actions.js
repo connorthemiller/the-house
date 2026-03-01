@@ -88,13 +88,17 @@ export var methods = {
       this.drives.comfort < 0.4 && this.drives.energy < 0.4) ? 0.4 : 0.1;
     candidates.push({ action: 'rest', target: null, score: restScore + noise() });
 
-    // Apply valence multiplier from memory + development score modifier
+    // Apply valence multiplier from memory + development score modifier + familiarity
     var mem = this.memory;
     var devMods = this.development.modifiers;
     for (var i = 0; i < candidates.length; i++) {
       var c = candidates[i];
       if (c.target && c.target.id && mem[c.target.id]) {
         c.score *= (1 + mem[c.target.id].valence * 0.2);
+        // Familiarity penalty for investigate/play: fresh=1.3x, fully familiar=0.3x
+        if (c.action === 'investigate' || c.action === 'play') {
+          c.score *= (1.3 - (mem[c.target.id].familiarity || 0));
+        }
       }
       var drive = this._actionToDrive(c.action);
       if (drive && devMods[drive]) {

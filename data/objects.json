@@ -100,7 +100,7 @@
     "emoji": "\ud83d\udcda",
     "name": "Bookshelf",
     "room": "living_room",
-    "col": 6,
+    "col": 5,
     "row": 0,
     "type": "furniture",
     "affordances": ["read", "explore"],

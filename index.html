@@ -17,7 +17,39 @@
       <button id="nav-next" class="nav-btn">&gt;</button>
     </div>
   </div>
+  <div id="drives-hud">
+    <div class="dhud-item">
+      <span class="dhud-label">hunger</span>
+      <div class="dhud-track"><div class="dhud-fill" data-drive="hunger"></div></div>
+    </div>
+    <div class="dhud-item">
+      <span class="dhud-label">curiosity</span>
+      <div class="dhud-track"><div class="dhud-fill" data-drive="curiosity"></div></div>
+    </div>
+    <div class="dhud-item">
+      <span class="dhud-label">comfort</span>
+      <div class="dhud-track"><div class="dhud-fill" data-drive="comfort"></div></div>
+    </div>
+    <div class="dhud-item">
+      <span class="dhud-label">energy</span>
+      <div class="dhud-track"><div class="dhud-fill" data-drive="energy"></div></div>
+    </div>
+  </div>
+  <div id="care-bar">
+    <button class="care-main-btn" data-care="feed">feed</button>
+    <button class="care-main-btn" data-care="pet">pet</button>
+    <button class="care-main-btn" data-care="play">play</button>
+    <button class="care-main-btn" data-care="rest">rest</button>
+  </div>
   <div id="ui-overlay"></div>
+  <button id="log-toggle" class="log-toggle-btn">log</button>
+  <div id="log-panel" class="log-panel" style="display:none;">
+    <div class="log-header">
+      <span>activity log</span>
+      <button id="log-close" class="log-close-btn">x</button>
+    </div>
+    <div id="log-list" class="log-list"></div>
+  </div>
   <div id="naming-modal" class="modal-overlay" style="display:none;">
     <div class="modal-box">
       <div class="modal-emoji" id="modal-emoji"></div>

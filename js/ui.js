@@ -34,6 +34,7 @@ class UI {
     this._onCreatureTapped = this._onCreatureTapped.bind(this);
     this._onDayNight = this._onDayNight.bind(this);
     this._onDocClick = this._onDocClick.bind(this);
+    this._careCooldowns = {};
   }
 
   setCreature(creature) {
@@ -54,6 +55,7 @@ class UI {
       this.navNext.addEventListener('click', () => this._onNavNext());
     }
 
+    this._setupCareBar();
     this._updateNav();
   }
 
@@ -210,18 +212,20 @@ class UI {
         '<hr class="creature-modal-divider">' +
         '<div class="creature-modal-row">' +
           '<span class="creature-modal-row-label">mood</span>' +
-          '<span class="creature-modal-row-value">' + moodText + '</span>' +
+          '<span class="creature-modal-row-value" data-field="mood">' + moodText + '</span>' +
         '</div>' +
         '<div class="creature-modal-row">' +
           '<span class="creature-modal-row-label">action</span>' +
-          '<span class="creature-modal-row-value">' + actionText + '</span>' +
+          '<span class="creature-modal-row-value" data-field="action">' + actionText + '</span>' +
         '</div>' +
         this._personalitySection(c) +
         '<hr class="creature-modal-divider">' +
-        this._driveBar('hunger', hungerPct, '#c66') +
-        this._driveBar('curiosity', curiosityPct, '#6ac') +
-        this._driveBar('comfort', comfortPct, '#a6c') +
-        this._driveBar('energy', energyPct, '#ca6') +
+        '<div data-field="drives">' +
+          this._driveBar('hunger', hungerPct, '#c66') +
+          this._driveBar('curiosity', curiosityPct, '#6ac') +
+          this._driveBar('comfort', comfortPct, '#a6c') +
+          this._driveBar('energy', energyPct, '#ca6') +
+        '</div>' +
         this._favoritesSection(c) +
         '<div class="creature-modal-hint">drag to move</div>' +
       '</div>';
@@ -316,6 +320,33 @@ class UI {
       '<div class="drive-track"><div class="drive-fill" style="width:' + pct + '%;background:' + color + '"></div></div>' +
       '<span class="drive-pct" style="color:#555;width:30px;text-align:right;flex-shrink:0">' + pct + '%</span>' +
     '</div>';
+  }
+
+  _setupCareBar() {
+    var self = this;
+    var btns = document.querySelectorAll('.care-main-btn');
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].addEventListener('click', function() {
+        var action = this.dataset.care;
+        if (!self.creature) return;
+        var now = Date.now();
+        if (self._careCooldowns[action] && now - self._careCooldowns[action] < 1000) return;
+        self._careCooldowns[action] = now;
+        self.creature.receiveCare(action);
+      });
+    }
+  }
+
+  updateDrives() {
+    if (!this.creature) return;
+    var drives = this.creature.drives;
+    var keys = ['hunger', 'curiosity', 'comfort', 'energy'];
+    for (var i = 0; i < keys.length; i++) {
+      var el = document.querySelector('.dhud-fill[data-drive="' + keys[i] + '"]');
+      if (el) {
+        el.style.width = Math.round(drives[keys[i]] * 100) + '%';
+      }
+    }
   }
 
   _onEmptyTapped(data) {

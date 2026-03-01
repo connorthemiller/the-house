@@ -8,6 +8,7 @@ import Input from './input.js';
 import UI from './ui.js';
 import Persistence from './persistence.js';
 import Creature from './creature.js';
+import ActivityLog from './activitylog.js';
 
 var CREATURE_CONFIG = {
   name: 'Lobster',
@@ -107,12 +108,19 @@ async function init() {
   // Start day/night cycle
   daynight.start();
 
+  // Activity log
+  const activityLog = new ActivityLog(bus);
+  activityLog.start();
+
   // Start creature
   creature.start();
 
   // Render on state changes
   const scheduleRender = () => {
-    requestAnimationFrame(() => renderer.render());
+    requestAnimationFrame(() => {
+      renderer.render();
+      ui.updateDrives();
+    });
   };
 
   bus.on('daynight:changed', scheduleRender);
@@ -130,6 +138,8 @@ async function init() {
   bus.on('creature:picked-up', scheduleRender);
   bus.on('creature:renamed', scheduleRender);
   bus.on('creature:memory-updated', scheduleRender);
+  bus.on('creature:cared', scheduleRender);
+  bus.on('creature:mood-changed', scheduleRender);
 
   // Nav: switch room in single mode
   bus.on('nav:room-changed', (data) => {
@@ -152,6 +162,7 @@ async function init() {
 
   // Initial render
   renderer.render();
+  ui.updateDrives();
 }
 
 init().catch(err => console.error('House init failed:', err));

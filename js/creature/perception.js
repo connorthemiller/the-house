@@ -29,11 +29,11 @@ export var methods = {
       }
     }
 
-    // Novel objects in current room
+    // Novel objects in current room (familiarity < 0.7)
     var novelObjects = [];
     for (var i = 0; i < roomObjects.length; i++) {
       var memEntry = this.memory[roomObjects[i].id];
-      if (!memEntry || memEntry.interactions === 0) {
+      if (!memEntry || (memEntry.familiarity || 0) < 0.7) {
         novelObjects.push(roomObjects[i]);
       }
     }
