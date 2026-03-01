@@ -404,6 +404,12 @@ async function initPlaydate(playdateInfo) {
       // Save friend memory on host
       savePlaydateResult(creature, playdateInfo.guest, playdateInfo.location);
 
+      // Reset creature position to home before saving
+      creature.room = CREATURE_CONFIG.startRoom;
+      creature.col = CREATURE_CONFIG.startCol;
+      creature.row = CREATURE_CONFIG.startRow;
+      creature.currentAction = null;
+
       // Save creature state
       persistence.setCreature(creature);
       persistence.saveCreature();
@@ -740,6 +746,13 @@ async function initRealtimePlaydate(sessionCode, locationId, isHost) {
         };
         savePlaydateResult(creature, guestData, locationId);
       }
+
+      // Reset creature position to home before saving
+      // (otherwise it saves room="park" which doesn't exist at home)
+      creature.room = CREATURE_CONFIG.startRoom;
+      creature.col = CREATURE_CONFIG.startCol;
+      creature.row = CREATURE_CONFIG.startRow;
+      creature.currentAction = null;
 
       // Save creature state
       persistence.setCreature(creature);
