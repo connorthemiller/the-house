@@ -2,19 +2,11 @@
 
 var STORAGE_KEY = 'the_house_llm_v1';
 
-// Built-in free tier (Groq) -- works out of the box, no setup
-var BUILTIN_KEY = '';
-var BUILTIN_PROVIDER = 'groq';
+// Built-in free tier -- proxied through Cloudflare Worker (key lives server-side)
+var BUILTIN_ENDPOINT = 'https://the-house-llm.connorthemiller.workers.dev';
+var BUILTIN_PROVIDER = 'groq'; // response format
 var BUILTIN_MODEL = 'llama-3.1-8b-instant';
 var BUILTIN_MIN_INTERVAL = 15; // minutes -- gentle on shared free key
-
-// Load key from untracked config file (js/config.local.js)
-try {
-  var _cfg = await import('./config.local.js');
-  if (_cfg.GROQ_KEY) BUILTIN_KEY = _cfg.GROQ_KEY;
-} catch (e) {
-  // config.local.js not found -- builtin reflections disabled
-}
 
 export var PROVIDERS = {
   anthropic: {
@@ -184,29 +176,35 @@ export function estimateCost() {
 
 export async function callLLM(systemPrompt, userMessage) {
   var settings = getSettings();
-  var apiKey, provider, model;
+  var provider, endpoint, headers, body;
 
   if (settings.mode === 'builtin') {
-    apiKey = BUILTIN_KEY;
     provider = PROVIDERS[BUILTIN_PROVIDER];
-    model = BUILTIN_MODEL;
+    endpoint = BUILTIN_ENDPOINT;
+    headers = { 'Content-Type': 'application/json' };
+    body = provider.buildBody(BUILTIN_MODEL, systemPrompt, userMessage);
   } else {
     provider = PROVIDERS[settings.provider];
-    apiKey = settings.apiKey;
-    model = settings.model || (provider ? provider.defaultModel : '');
+    if (!provider || !settings.apiKey) {
+      return { text: null, usage: null, error: 'not configured' };
+    }
+    var model = settings.model || provider.defaultModel;
+    endpoint = provider.endpoint;
+    headers = provider.buildHeaders(settings.apiKey);
+    body = provider.buildBody(model, systemPrompt, userMessage);
   }
 
-  if (!provider || !apiKey) {
+  if (!provider) {
     return { text: null, usage: null, error: 'not configured' };
   }
   var controller = new AbortController();
   var timeout = setTimeout(function() { controller.abort(); }, 30000);
 
   try {
-    var resp = await fetch(provider.endpoint, {
+    var resp = await fetch(endpoint, {
       method: 'POST',
-      headers: provider.buildHeaders(apiKey),
-      body: JSON.stringify(provider.buildBody(model, systemPrompt, userMessage)),
+      headers: headers,
+      body: JSON.stringify(body),
       signal: controller.signal
     });
     clearTimeout(timeout);
