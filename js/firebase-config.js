@@ -62,8 +62,11 @@ async function initFirebase(timeoutMs) {
       // Test connectivity with .info/connected
       var connRef = dbMod.ref(_db, '.info/connected');
       await new Promise(function(connResolve) {
-        var unsub = dbMod.onValue(connRef, function(snap) {
-          unsub();
+        var unsub = null;
+        unsub = dbMod.onValue(connRef, function(snap) {
+          // onValue may fire synchronously before unsub is assigned
+          if (unsub) unsub();
+          else setTimeout(function() { if (unsub) unsub(); }, 0);
           connResolve();
         });
       });
