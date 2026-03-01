@@ -2,6 +2,12 @@
 
 import { CELL } from './renderer.js';
 
+function esc(text) {
+  var d = document.createElement('div');
+  d.textContent = text;
+  return d.innerHTML;
+}
+
 const PICKER_ITEMS = [
   { category: 'food', emoji: '\ud83c\udf4e', name: 'Apple', type: 'food', affordances: ['eat'], consumable: true, comfortValue: 0.3 },
   { category: 'food', emoji: '\ud83d\udc1f', name: 'Fish', type: 'food', affordances: ['eat'], consumable: true, comfortValue: 0.4 },
@@ -152,14 +158,13 @@ class UI {
 
     const panel = document.createElement('div');
     panel.className = 'info-panel';
-    panel.innerHTML = `
-      <div class="info-emoji">${object.isDayNightWindow ? '(window)' : object.emoji}</div>
-      <div class="info-name">${object.name}</div>
-      <div class="info-type">${object.type}</div>
-      <div class="info-row"><span>affordances:</span> ${object.affordances.join(', ')}</div>
-      <div class="info-row"><span>comfort:</span> ${object.comfortValue}</div>
-      ${object.userPlaced ? '<div class="info-row info-action" data-action="remove">[ remove ]</div>' : ''}
-    `;
+    panel.innerHTML =
+      '<div class="info-emoji">' + esc(object.isDayNightWindow ? '(window)' : object.emoji) + '</div>' +
+      '<div class="info-name">' + esc(object.name) + '</div>' +
+      '<div class="info-type">' + esc(object.type) + '</div>' +
+      '<div class="info-row"><span>affordances:</span> ' + esc(object.affordances.join(', ')) + '</div>' +
+      '<div class="info-row"><span>comfort:</span> ' + esc(String(object.comfortValue)) + '</div>' +
+      (object.userPlaced ? '<div class="info-row info-action" data-action="remove">[ remove ]</div>' : '');
     panel.style.left = pos.x + 'px';
     panel.style.top = pos.y + 'px';
 
@@ -206,22 +211,22 @@ class UI {
     overlay.innerHTML =
       '<div class="creature-modal">' +
         '<div class="creature-modal-header">' +
-          '<span class="creature-modal-emoji">' + c.emoji + '</span>' +
+          '<span class="creature-modal-emoji">' + esc(c.emoji) + '</span>' +
           '<div>' +
-            '<div class="creature-modal-name">' + c.name +
+            '<div class="creature-modal-name">' + esc(c.name) +
               '<span class="creature-modal-rename" data-action="rename">rename</span>' +
             '</div>' +
-            '<div class="creature-modal-species">' + c.species + '</div>' +
+            '<div class="creature-modal-species">' + esc(c.species) + '</div>' +
           '</div>' +
         '</div>' +
         '<hr class="creature-modal-divider">' +
         '<div class="creature-modal-row">' +
           '<span class="creature-modal-row-label">mood</span>' +
-          '<span class="creature-modal-row-value" data-field="mood">' + moodText + '</span>' +
+          '<span class="creature-modal-row-value" data-field="mood">' + esc(moodText) + '</span>' +
         '</div>' +
         '<div class="creature-modal-row">' +
           '<span class="creature-modal-row-label">action</span>' +
-          '<span class="creature-modal-row-value" data-field="action">' + actionText + '</span>' +
+          '<span class="creature-modal-row-value" data-field="action">' + esc(actionText) + '</span>' +
         '</div>' +
         this._personalitySection(c) +
         '<hr class="creature-modal-divider">' +
@@ -302,22 +307,22 @@ class UI {
     overlay.innerHTML =
       '<div class="creature-modal guest-modal">' +
         '<div class="creature-modal-header">' +
-          '<span class="creature-modal-emoji">' + c.emoji + '</span>' +
+          '<span class="creature-modal-emoji">' + esc(c.emoji) + '</span>' +
           '<div>' +
-            '<div class="creature-modal-name">' + c.name +
+            '<div class="creature-modal-name">' + esc(c.name) +
               '<span class="guest-badge">guest</span>' +
             '</div>' +
-            '<div class="creature-modal-species">' + c.species + '</div>' +
+            '<div class="creature-modal-species">' + esc(c.species) + '</div>' +
           '</div>' +
         '</div>' +
         '<hr class="creature-modal-divider">' +
         '<div class="creature-modal-row">' +
           '<span class="creature-modal-row-label">mood</span>' +
-          '<span class="creature-modal-row-value">' + moodText + '</span>' +
+          '<span class="creature-modal-row-value">' + esc(moodText) + '</span>' +
         '</div>' +
         '<div class="creature-modal-row">' +
           '<span class="creature-modal-row-label">action</span>' +
-          '<span class="creature-modal-row-value">' + actionText + '</span>' +
+          '<span class="creature-modal-row-value">' + esc(actionText) + '</span>' +
         '</div>' +
         this._personalitySection(c) +
         '<hr class="creature-modal-divider">' +
@@ -347,7 +352,7 @@ class UI {
     var text = traits.length > 0 ? traits.join(', ') : 'developing...';
     return '<div class="creature-modal-row creature-modal-personality">' +
       '<span class="creature-modal-row-label">personality</span>' +
-      '<span class="creature-modal-row-value">' + text + '</span>' +
+      '<span class="creature-modal-row-value">' + esc(text) + '</span>' +
     '</div>';
   }
 
@@ -370,7 +375,7 @@ class UI {
       '<div class="creature-modal-fav">';
     for (var i = 0; i < favs.length; i++) {
       html += '<span class="creature-modal-fav-item">' +
-        favs[i].emoji + ' ' + favs[i].name + '</span>';
+        esc(favs[i].emoji + ' ' + favs[i].name) + '</span>';
     }
     html += '</div>';
     return html;

@@ -1,5 +1,11 @@
 // Activity log -- color-coded event panel
 
+function esc(text) {
+  var d = document.createElement('div');
+  d.textContent = text;
+  return d.innerHTML;
+}
+
 var MAX_ENTRIES = 100;
 
 var COLORS = {
@@ -88,9 +94,9 @@ class ActivityLog {
     if (!this.list) return;
     var el = document.createElement('div');
     el.className = 'log-entry';
-    el.innerHTML = '<span class="log-time">' + entry.timestamp + '</span>' +
+    el.innerHTML = '<span class="log-time">' + esc(entry.timestamp) + '</span>' +
       '<span class="log-dot" style="background:' + entry.color + '"></span>' +
-      '<span class="log-text">' + entry.text + '</span>';
+      '<span class="log-text">' + esc(entry.text) + '</span>';
     this.list.appendChild(el);
     // Auto-scroll to bottom
     this.list.scrollTop = this.list.scrollHeight;

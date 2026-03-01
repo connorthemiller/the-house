@@ -16,8 +16,10 @@ async function dbMod() {
 function generateSessionCode() {
   var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no I/O/0/1 to avoid confusion
   var code = '';
+  var bytes = new Uint8Array(6);
+  crypto.getRandomValues(bytes);
   for (var i = 0; i < 6; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
+    code += chars.charAt(bytes[i] % chars.length);
   }
   return code;
 }
@@ -25,8 +27,10 @@ function generateSessionCode() {
 function generatePlayerId() {
   var hex = '0123456789abcdef';
   var id = 'p_';
+  var bytes = new Uint8Array(8);
+  crypto.getRandomValues(bytes);
   for (var i = 0; i < 8; i++) {
-    id += hex.charAt(Math.floor(Math.random() * hex.length));
+    id += hex.charAt(bytes[i] % hex.length);
   }
   return id;
 }
@@ -65,15 +69,27 @@ function createPuppet(data) {
   };
 }
 
+function _str(val, maxLen) {
+  if (typeof val !== 'string') return null;
+  return val.slice(0, maxLen);
+}
+
+function _num(val, min, max) {
+  if (typeof val !== 'number' || isNaN(val)) return null;
+  return Math.max(min, Math.min(max, val));
+}
+
 function updatePuppet(puppet, data) {
   if (!puppet || !data) return;
-  if (data.name != null) puppet.name = data.name;
-  if (data.emoji != null) puppet.emoji = data.emoji;
-  if (data.room != null) puppet.room = data.room;
-  if (data.col != null) puppet.col = data.col;
-  if (data.row != null) puppet.row = data.row;
-  if (data.mood != null) puppet.mood = data.mood;
-  if (data.action != null) puppet.currentAction = data.action;
+  var s;
+  s = _str(data.name, 16); if (s != null) puppet.name = s;
+  s = _str(data.emoji, 8); if (s != null) puppet.emoji = s;
+  s = _str(data.room, 32); if (s != null) puppet.room = s;
+  var n;
+  n = _num(data.col, 0, 20); if (n != null) puppet.col = n;
+  n = _num(data.row, 0, 20); if (n != null) puppet.row = n;
+  s = _str(data.mood, 16); if (s != null) puppet.mood = s;
+  s = _str(data.action, 32); if (s != null) puppet.currentAction = s;
   puppet.dragging = !!data.dragging;
   if (data.dragX != null && data.dragY != null) {
     puppet._dragPixel = { x: data.dragX, y: data.dragY };
@@ -213,6 +229,8 @@ function _creatureSnapshot(creature, roomId) {
 }
 
 // SyncWriter -- writes local creature state on events
+var WRITE_THROTTLE_MS = 200; // max 5 writes/sec
+
 function SyncWriter(sessionCode, playerId, creature, bus) {
   this.sessionCode = sessionCode;
   this.playerId = playerId;
@@ -221,6 +239,8 @@ function SyncWriter(sessionCode, playerId, creature, bus) {
   this._listeners = [];
   this._playerRef = null;
   this._started = false;
+  this._writeTimer = null;
+  this._lastWrite = 0;
 }
 
 SyncWriter.prototype.start = async function() {
@@ -251,6 +271,24 @@ SyncWriter.prototype.start = async function() {
 
 SyncWriter.prototype._write = function() {
   if (!this._started || !this._playerRef) return;
+  var now = Date.now();
+  var self = this;
+  if (now - this._lastWrite < WRITE_THROTTLE_MS) {
+    // Throttle: schedule a trailing write
+    if (!this._writeTimer) {
+      this._writeTimer = setTimeout(function() {
+        self._writeTimer = null;
+        self._doWrite();
+      }, WRITE_THROTTLE_MS);
+    }
+    return;
+  }
+  this._doWrite();
+};
+
+SyncWriter.prototype._doWrite = function() {
+  if (!this._started || !this._playerRef) return;
+  this._lastWrite = Date.now();
   var snap = _creatureSnapshot(this.creature, null);
   this._mod.set(this._playerRef, snap);
 };
@@ -261,6 +299,10 @@ SyncWriter.prototype.stop = function() {
   }
   this._listeners = [];
   this._started = false;
+  if (this._writeTimer) {
+    clearTimeout(this._writeTimer);
+    this._writeTimer = null;
+  }
 };
 
 // --- Sync: reading remote player state from Firebase ---
