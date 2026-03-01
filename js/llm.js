@@ -3,10 +3,18 @@
 var STORAGE_KEY = 'the_house_llm_v1';
 
 // Built-in free tier (Groq) -- works out of the box, no setup
-var BUILTIN_KEY = ''; // paste Groq free-tier key here (do not commit real keys)
+var BUILTIN_KEY = '';
 var BUILTIN_PROVIDER = 'groq';
 var BUILTIN_MODEL = 'llama-3.1-8b-instant';
 var BUILTIN_MIN_INTERVAL = 15; // minutes -- gentle on shared free key
+
+// Load key from untracked config file (js/config.local.js)
+try {
+  var _cfg = await import('./config.local.js');
+  if (_cfg.GROQ_KEY) BUILTIN_KEY = _cfg.GROQ_KEY;
+} catch (e) {
+  // config.local.js not found -- builtin reflections disabled
+}
 
 export var PROVIDERS = {
   anthropic: {
