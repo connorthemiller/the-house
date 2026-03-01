@@ -3,7 +3,7 @@
 var STORAGE_KEY = 'the_house_llm_v1';
 
 // Built-in free tier -- proxied through Cloudflare Worker (key lives server-side)
-var BUILTIN_ENDPOINT = 'https://the-house-llm.connorthemiller.workers.dev';
+var BUILTIN_ENDPOINT = 'https://the-house-llm.lobsters.workers.dev/';
 var BUILTIN_PROVIDER = 'groq'; // response format
 var BUILTIN_MODEL = 'llama-3.1-8b-instant';
 var BUILTIN_MIN_INTERVAL = 15; // minutes -- gentle on shared free key
