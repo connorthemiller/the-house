@@ -8,7 +8,8 @@ var COLORS = {
   memory:      '#c8a',
   care:        '#6cc',
   environment: '#68c',
-  creature:    '#cc8'
+  creature:    '#cc8',
+  social:      '#8c6'
 };
 
 function pad2(n) { return n < 10 ? '0' + n : '' + n; }
@@ -39,6 +40,7 @@ class ActivityLog {
     this._onRoomChanged = this._onRoomChanged.bind(this);
     this._onPickedUp = this._onPickedUp.bind(this);
     this._onDropped = this._onDropped.bind(this);
+    this._onFriendInteraction = this._onFriendInteraction.bind(this);
   }
 
   start() {
@@ -59,6 +61,7 @@ class ActivityLog {
     this.bus.on('creature:room-changed', this._onRoomChanged);
     this.bus.on('creature:picked-up', this._onPickedUp);
     this.bus.on('creature:dropped', this._onDropped);
+    this.bus.on('creature:friend-interaction', this._onFriendInteraction);
   }
 
   _toggle() {
@@ -127,6 +130,11 @@ class ActivityLog {
 
   _onDropped(data) {
     this._addEntry('creature', 'dropped in ' + data.room);
+  }
+
+  _onFriendInteraction(data) {
+    var action = data.action.replace(/_/g, ' ');
+    this._addEntry('social', action + ' with ' + data.entry.name);
   }
 }
 

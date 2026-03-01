@@ -4,8 +4,8 @@ export var methods = {
   _actionToDrive: function(action) {
     switch (action) {
       case 'eat': case 'seek_food': return 'hunger';
-      case 'investigate': case 'explore_room': case 'play': return 'curiosity';
-      case 'cuddle': case 'rest': case 'seek_comfort': return 'comfort';
+      case 'investigate': case 'explore_room': case 'play': case 'play_together': return 'curiosity';
+      case 'cuddle': case 'rest': case 'seek_comfort': case 'share_space': case 'rest_together': return 'comfort';
       case 'sleep': case 'seek_sleep': return 'energy';
       default: return null;
     }

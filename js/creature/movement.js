@@ -98,6 +98,9 @@ export var methods = {
     if (!room) return false;
     if (col < 0 || col >= room.cols || row < 0 || row >= room.rows) return false;
     if (this.world.getObjectAt(roomId, col, row)) return false;
+    // Block companion's cell
+    if (this.companion && this.companion.room === roomId &&
+        this.companion.col === col && this.companion.row === row) return false;
     return true;
   },
 

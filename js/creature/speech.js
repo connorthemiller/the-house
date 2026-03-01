@@ -14,7 +14,11 @@ var SPEECH_LINES = {
   sleep: ['zzz', 'zzz...', '*snore*'],
   seek_sleep: ['sleepy...', 'bed?', '*yawn*'],
   seek_comfort: ['cold...', 'hmm', 'need hug'],
-  react_new: ['ooh!', 'new thing!', 'hm?', 'what!']
+  react_new: ['ooh!', 'new thing!', 'hm?', 'what!'],
+  approach_friend: ['friend!', 'hey!', 'over here!', 'wait up!'],
+  play_together: ['fun together!', 'wheee!', 'hehe!', 'play!', 'tag!'],
+  rest_together: ['cozy...', 'nice company', 'zzz...', 'peaceful'],
+  share_space: ['friend...', 'together', 'nice', 'comfy']
 };
 
 var CARE_SPEECH = {

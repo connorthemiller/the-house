@@ -1,0 +1,152 @@
+{
+  "locations": {
+    "park": {
+      "room": {
+        "id": "park",
+        "name": "Park",
+        "cols": 10,
+        "rows": 6,
+        "color": "#2a3a2a"
+      },
+      "objects": [
+        {
+          "id": "park_tree_1", "emoji": "\ud83c\udf33", "name": "Tree",
+          "room": "park", "col": 0, "row": 0, "type": "comfort",
+          "affordances": ["sit_on", "explore", "cuddle"], "comfortValue": 0.5, "novelty": 0.4
+        },
+        {
+          "id": "park_tree_2", "emoji": "\ud83c\udf32", "name": "Pine Tree",
+          "room": "park", "col": 9, "row": 0, "type": "comfort",
+          "affordances": ["explore"], "comfortValue": 0.3, "novelty": 0.4
+        },
+        {
+          "id": "park_bench", "emoji": "\ud83e\ude91", "name": "Bench",
+          "room": "park", "col": 4, "row": 1, "type": "furniture",
+          "affordances": ["sit_on", "sleep", "cuddle"], "comfortValue": 0.6, "novelty": 0.3
+        },
+        {
+          "id": "park_ball", "emoji": "\u26bd", "name": "Ball",
+          "room": "park", "col": 7, "row": 3, "type": "toy",
+          "affordances": ["play", "bat"], "comfortValue": 0.2, "novelty": 0.7
+        },
+        {
+          "id": "park_sunflower", "emoji": "\ud83c\udf3b", "name": "Sunflower",
+          "room": "park", "col": 2, "row": 5, "type": "comfort",
+          "affordances": ["smell", "explore"], "comfortValue": 0.4, "novelty": 0.5
+        },
+        {
+          "id": "park_pond", "emoji": "\ud83d\udca7", "name": "Pond",
+          "room": "park", "col": 8, "row": 5, "type": "fixture",
+          "affordances": ["explore", "drink"], "comfortValue": 0.3, "novelty": 0.6
+        },
+        {
+          "id": "park_picnic", "emoji": "\ud83e\uddc2", "name": "Picnic Basket",
+          "room": "park", "col": 3, "row": 3, "type": "food",
+          "affordances": ["eat"], "comfortValue": 0.5, "novelty": 0.5
+        },
+        {
+          "id": "park_butterfly", "emoji": "\ud83e\udd8b", "name": "Butterfly",
+          "room": "park", "col": 6, "row": 1, "type": "toy",
+          "affordances": ["play", "bat", "explore"], "comfortValue": 0.2, "novelty": 0.9
+        }
+      ]
+    },
+    "cafe": {
+      "room": {
+        "id": "cafe",
+        "name": "Cafe",
+        "cols": 8,
+        "rows": 5,
+        "color": "#3a302a"
+      },
+      "objects": [
+        {
+          "id": "cafe_table_1", "emoji": "\ud83e\ude91", "name": "Table",
+          "room": "cafe", "col": 1, "row": 1, "type": "furniture",
+          "affordances": ["sit_on"], "comfortValue": 0.3, "novelty": 0.2
+        },
+        {
+          "id": "cafe_table_2", "emoji": "\ud83e\ude91", "name": "Table",
+          "room": "cafe", "col": 5, "row": 1, "type": "furniture",
+          "affordances": ["sit_on"], "comfortValue": 0.3, "novelty": 0.2
+        },
+        {
+          "id": "cafe_coffee", "emoji": "\u2615", "name": "Coffee",
+          "room": "cafe", "col": 2, "row": 1, "type": "food",
+          "affordances": ["eat", "drink"], "comfortValue": 0.4, "novelty": 0.5
+        },
+        {
+          "id": "cafe_cake", "emoji": "\ud83c\udf70", "name": "Cake",
+          "room": "cafe", "col": 6, "row": 1, "type": "food",
+          "affordances": ["eat"], "comfortValue": 0.5, "novelty": 0.6
+        },
+        {
+          "id": "cafe_plant", "emoji": "\ud83e\udeb4", "name": "Plant",
+          "room": "cafe", "col": 0, "row": 4, "type": "comfort",
+          "affordances": ["smell", "explore"], "comfortValue": 0.4, "novelty": 0.4
+        },
+        {
+          "id": "cafe_cushion", "emoji": "\ud83d\udecb\ufe0f", "name": "Cushion",
+          "room": "cafe", "col": 3, "row": 3, "type": "comfort",
+          "affordances": ["sit_on", "sleep", "cuddle"], "comfortValue": 0.7, "novelty": 0.3
+        },
+        {
+          "id": "cafe_music", "emoji": "\ud83c\udfb5", "name": "Music Box",
+          "room": "cafe", "col": 7, "row": 0, "type": "toy",
+          "affordances": ["play", "noise"], "comfortValue": 0.3, "novelty": 0.7
+        }
+      ]
+    },
+    "mountains": {
+      "room": {
+        "id": "mountains",
+        "name": "Mountains",
+        "cols": 10,
+        "rows": 6,
+        "color": "#2a3040"
+      },
+      "objects": [
+        {
+          "id": "mtn_rock_1", "emoji": "\ud83e\udea8", "name": "Rock",
+          "room": "mountains", "col": 1, "row": 1, "type": "fixture",
+          "affordances": ["sit_on", "explore"], "comfortValue": 0.2, "novelty": 0.4
+        },
+        {
+          "id": "mtn_rock_2", "emoji": "\ud83e\udea8", "name": "Rock",
+          "room": "mountains", "col": 8, "row": 4, "type": "fixture",
+          "affordances": ["sit_on", "explore"], "comfortValue": 0.2, "novelty": 0.4
+        },
+        {
+          "id": "mtn_stream", "emoji": "\ud83c\udf0a", "name": "Stream",
+          "room": "mountains", "col": 5, "row": 5, "type": "fixture",
+          "affordances": ["explore", "drink"], "comfortValue": 0.3, "novelty": 0.6
+        },
+        {
+          "id": "mtn_bush", "emoji": "\ud83c\udf3f", "name": "Bush",
+          "room": "mountains", "col": 3, "row": 2, "type": "comfort",
+          "affordances": ["explore", "hide"], "comfortValue": 0.3, "novelty": 0.5
+        },
+        {
+          "id": "mtn_campfire", "emoji": "\ud83d\udd25", "name": "Campfire",
+          "room": "mountains", "col": 6, "row": 3, "type": "comfort",
+          "affordances": ["warm", "sit_on", "cuddle"], "comfortValue": 0.6, "novelty": 0.5
+        },
+        {
+          "id": "mtn_berries", "emoji": "\ud83c\udf53", "name": "Berries",
+          "room": "mountains", "col": 9, "row": 1, "type": "food",
+          "affordances": ["eat"], "comfortValue": 0.3, "novelty": 0.5
+        },
+        {
+          "id": "mtn_log", "emoji": "\ud83e\udeb5", "name": "Log",
+          "room": "mountains", "col": 2, "row": 4, "type": "furniture",
+          "affordances": ["sit_on", "sleep"], "comfortValue": 0.4, "novelty": 0.3
+        },
+        {
+          "id": "mtn_pinecone", "emoji": "\ud83c\udf32", "name": "Pinecone",
+          "room": "mountains", "col": 7, "row": 1, "type": "toy",
+          "affordances": ["play", "bat"], "comfortValue": 0.1, "novelty": 0.7
+        }
+      ]
+    }
+  }
+}

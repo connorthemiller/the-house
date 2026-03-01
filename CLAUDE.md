@@ -4,12 +4,12 @@ Digital creature habitat. Vanilla JS + Canvas, no build step, ES modules. A lobs
 
 ## Current State
 
-Phases 0-3 complete + gap-fill sprint + mobile-first UI rework. Equal room sizes (all 6x5), drives HUD and care buttons on main view (below canvas), creature modal is inspection-only. Next up: Phase 4 (LLM reflective layer).
+Phases 0-3 complete + gap-fill sprint + mobile-first UI rework + social playdates. Equal room sizes (all 6x5), drives HUD and care buttons on main view (below canvas), creature modal is inspection-only. Playdate system: async local simulation via share links, 3 locations (park/cafe/mountains), 4 social actions. Next up: Phase 4 (LLM reflective layer).
 
 ## File Map
 
 ```
-js/main.js              init, event wiring, render loop
+js/main.js              init (home + playdate modes), event wiring, render loop
 js/eventbus.js          pub/sub: on/off/emit
 js/world.js             room/object state manager
 js/renderer.js          canvas drawing (rooms, walls, objects, creature, lighting)
@@ -27,8 +27,10 @@ js/creature.js          Creature class (hub, imports creature/ modules)
   creature/memory.js       object memory, valence, familiarity/habituation
   creature/development.js  action counts, personality modifiers
   creature/speech.js       context-aware speech generation
+js/playdate.js          packet encode/decode, URL parsing, guest factory, link gen
 data/house.json         room definitions, doorways
 data/objects.json       default furniture catalog
+data/playdate-locations.json  park, cafe, mountains playdate locations
 ```
 
 ## Architecture Rules
@@ -59,6 +61,8 @@ creature:memory-updated { objectId, entry }
 creature:mood-changed   { prev, next }
 creature:cared          { action, driveAffected, amount }
 object:dragging         { x, y }
+input:guest-tapped      { creature, roomId, col, row }
+creature:friend-interaction { friendKey, action, entry }
 ```
 
 ## Creature State Shape
@@ -68,6 +72,8 @@ creature.drives     -- { hunger, curiosity, comfort, energy } each 0-1
 creature.mood       -- string: sleepy/hungry/uneasy/happy/content/restless/okay
 creature.memory     -- { [objectId]: { name, emoji, interactions, actions, lastSeen, valence, familiarity } }
 creature.development -- { actionCounts, totalActions, modifiers per drive }
+creature.friendMemory -- { [name_species]: { name, species, emoji, playdates, totalInteractions, lastSeen, actions, valence } }
+creature.companion -- reference to another Creature (null at home, set during playdate)
 creature.room / creature.col / creature.row -- position
 creature.currentAction / creature.actionTarget -- what it's doing now
 ```

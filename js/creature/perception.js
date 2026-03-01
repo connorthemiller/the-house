@@ -89,11 +89,21 @@ export var methods = {
       }
     }
 
+    // Companion detection
+    var companionNearby = false;
+    var companionAdjacent = false;
+    if (this.companion && this.companion.room === this.room) {
+      companionNearby = true;
+      companionAdjacent = Math.abs(this.companion.col - this.col) +
+        Math.abs(this.companion.row - this.row) <= 1;
+    }
+
     return {
       roomObjects: roomObjects, allFood: allFood, adjacentFood: adjacentFood,
       novelObjects: novelObjects, toys: toys, comfortObjects: comfortObjects,
       adjacentComfort: adjacentComfort, sleepable: sleepable,
-      adjacentSleepable: adjacentSleepable
+      adjacentSleepable: adjacentSleepable,
+      companionNearby: companionNearby, companionAdjacent: companionAdjacent
     };
   }
 };

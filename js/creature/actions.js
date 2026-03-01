@@ -83,6 +83,36 @@ export var methods = {
     // wander: always
     candidates.push({ action: 'wander', target: null, score: 0.2 + noise() });
 
+    // --- Social actions (only when companion present) ---
+    if (this.companion) {
+      var friendValence = this._getFriendValence();
+      var socialBoost = 1 + friendValence * 0.3;
+
+      // approach_friend: companion in room but not adjacent
+      if (perception.companionNearby && !perception.companionAdjacent) {
+        candidates.push({ action: 'approach_friend', target: null,
+          score: 0.7 * socialBoost + noise() });
+      }
+
+      // play_together: adjacent, curiosity > 0.3
+      if (perception.companionAdjacent && this.drives.curiosity > 0.3) {
+        candidates.push({ action: 'play_together', target: null,
+          score: (this.drives.curiosity * 0.9) * socialBoost + noise() });
+      }
+
+      // rest_together: adjacent, energy > 0.4
+      if (perception.companionAdjacent && this.drives.energy > 0.4) {
+        candidates.push({ action: 'rest_together', target: null,
+          score: (this.drives.energy * 0.8) * socialBoost + noise() });
+      }
+
+      // share_space: adjacent, comfort > 0.3
+      if (perception.companionAdjacent && this.drives.comfort > 0.3) {
+        candidates.push({ action: 'share_space', target: null,
+          score: (this.drives.comfort * 0.8) * socialBoost + noise() });
+      }
+    }
+
     // rest: calmer when drives are low
     var restScore = (this.drives.hunger < 0.4 && this.drives.curiosity < 0.5 &&
       this.drives.comfort < 0.4 && this.drives.energy < 0.4) ? 0.4 : 0.1;
@@ -110,7 +140,8 @@ export var methods = {
     candidates.sort(function(a, b) { return b.score - a.score; });
     var winner = candidates[0];
 
-    var turnCounts = { eat: 3, investigate: 2, rest: 4, play: 2, cuddle: 3, sleep: 5 };
+    var turnCounts = { eat: 3, investigate: 2, rest: 4, play: 2, cuddle: 3, sleep: 5,
+      play_together: 3, rest_together: 4, share_space: 2 };
 
     this.currentAction = {
       action: winner.action,

@@ -17,11 +17,16 @@ class Renderer {
     this.mode = 'panorama'; // 'panorama' or 'single'
     this.currentRoomId = null; // active room in single mode
     this.creature = null;
+    this.guestCreature = null;
     this.dragObject = null; // { emoji, x, y } when dragging an object
   }
 
   setCreature(creature) {
     this.creature = creature;
+  }
+
+  setGuestCreature(guest) {
+    this.guestCreature = guest;
   }
 
   init() {
@@ -250,10 +255,23 @@ class Renderer {
 
   _drawCreature() {
     if (!this.creature) return;
-    var c = this.creature;
+
+    // Check if both creatures are on the same cell (for nudging)
+    var sameCell = this.guestCreature &&
+      this.creature.room === this.guestCreature.room &&
+      this.creature.col === this.guestCreature.col &&
+      this.creature.row === this.guestCreature.row;
+
+    this._drawSingleCreature(this.creature, false, sameCell ? -8 : 0);
+    if (this.guestCreature) {
+      this._drawSingleCreature(this.guestCreature, true, sameCell ? 8 : 0);
+    }
+  }
+
+  _drawSingleCreature(c, isGuest, nudgeX) {
     var ctx = this.ctx;
 
-    // Dragging -- draw at pixel position
+    // Dragging -- draw at pixel position (only host can be dragged)
     if (c.dragging && c._dragPixel) {
       var dx = c._dragPixel.x;
       var dy = c._dragPixel.y;
@@ -262,7 +280,6 @@ class Renderer {
       ctx.textBaseline = 'middle';
       ctx.fillText(c.emoji, dx, dy);
 
-      // Name below
       ctx.font = '10px monospace';
       ctx.fillStyle = '#888';
       ctx.textAlign = 'center';
@@ -275,7 +292,7 @@ class Renderer {
     var pos = this.roomLayout.rooms[c.room];
     if (!pos) return;
 
-    var cx = pos.x + c.col * CELL + CELL / 2;
+    var cx = pos.x + c.col * CELL + CELL / 2 + (nudgeX || 0);
     var cy = pos.y + c.row * CELL + CELL / 2;
 
     // Creature emoji
@@ -284,9 +301,9 @@ class Renderer {
     ctx.textBaseline = 'middle';
     ctx.fillText(c.emoji, cx, cy);
 
-    // Name label below
+    // Name label below -- guest gets greenish tint
     ctx.font = '10px monospace';
-    ctx.fillStyle = '#888';
+    ctx.fillStyle = isGuest ? '#6a8' : '#888';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     ctx.fillText(c.name, cx, pos.y + c.row * CELL + CELL + 1);

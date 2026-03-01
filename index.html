@@ -41,6 +41,7 @@
     <button class="care-main-btn" data-care="play">play</button>
     <button class="care-main-btn" data-care="rest">rest</button>
   </div>
+  <button id="playdate-btn" class="playdate-btn">playdate</button>
   <div id="ui-overlay"></div>
   <button id="log-toggle" class="log-toggle-btn">log</button>
   <div id="log-panel" class="log-panel" style="display:none;">
@@ -49,6 +50,52 @@
       <button id="log-close" class="log-close-btn">x</button>
     </div>
     <div id="log-list" class="log-list"></div>
+  </div>
+  <div id="playdate-hud" class="playdate-hud" style="display:none;">
+    <span class="playdate-location"></span>
+    <span class="playdate-guest-info">with <span class="playdate-guest-name"></span></span>
+    <span id="playdate-timer" class="playdate-timer">0:00</span>
+    <button id="playdate-end" class="playdate-end-btn">end playdate</button>
+  </div>
+  <div id="location-picker-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-box location-picker">
+      <div class="modal-label">choose a place</div>
+      <div class="location-grid">
+        <button class="location-option" data-location="park">
+          <span class="location-emoji">&#127795;</span>
+          <span class="location-name">Park</span>
+        </button>
+        <button class="location-option" data-location="cafe">
+          <span class="location-emoji">&#9749;</span>
+          <span class="location-name">Cafe</span>
+        </button>
+        <button class="location-option" data-location="mountains">
+          <span class="location-emoji">&#9968;</span>
+          <span class="location-name">Mountains</span>
+        </button>
+      </div>
+      <button class="modal-btn" data-action="cancel">cancel</button>
+    </div>
+  </div>
+  <div id="invite-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-box invite-box">
+      <div class="modal-label">send this link to a friend</div>
+      <input type="text" class="invite-link modal-input" readonly>
+      <div class="invite-actions">
+        <button class="modal-btn" data-action="copy">copy link</button>
+        <button class="modal-btn" data-action="close">done</button>
+      </div>
+    </div>
+  </div>
+  <div id="shareback-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-box shareback-box">
+      <div class="modal-label">playdate over! send this back so your friend can play too</div>
+      <input type="text" class="shareback-link modal-input" readonly>
+      <div class="invite-actions">
+        <button class="modal-btn" data-action="copy">copy link</button>
+        <button class="modal-btn" data-action="home">go home</button>
+      </div>
+    </div>
   </div>
   <div id="naming-modal" class="modal-overlay" style="display:none;">
     <div class="modal-box">

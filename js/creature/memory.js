@@ -59,5 +59,46 @@ export var methods = {
       return vb - va;
     });
     return sorted[0] || null;
+  },
+
+  _recordFriendInteraction: function(action) {
+    if (!this.companion) return;
+    var friendKey = this.companion.name + '_' + this.companion.species;
+    if (!this.friendMemory) this.friendMemory = {};
+
+    var entry = this.friendMemory[friendKey];
+    if (!entry) {
+      entry = {
+        name: this.companion.name,
+        species: this.companion.species,
+        emoji: this.companion.emoji,
+        playdates: 1,
+        totalInteractions: 0,
+        lastSeen: Date.now(),
+        actions: {},
+        valence: 0.2
+      };
+      this.friendMemory[friendKey] = entry;
+    }
+    entry.totalInteractions++;
+    entry.actions[action] = (entry.actions[action] || 0) + 1;
+    entry.lastSeen = Date.now();
+    entry.valence = this._computeFriendValence(entry);
+    this.bus.emit('creature:friend-interaction', {
+      friendKey: friendKey, action: action, entry: entry
+    });
+  },
+
+  _computeFriendValence: function(entry) {
+    // Valence scales from 0.2 (first meeting) to 0.8 (many interactions)
+    var interactions = entry.totalInteractions || 0;
+    return Math.min(0.8, 0.2 + interactions * 0.05);
+  },
+
+  _getFriendValence: function() {
+    if (!this.companion || !this.friendMemory) return 0;
+    var friendKey = this.companion.name + '_' + this.companion.species;
+    var entry = this.friendMemory[friendKey];
+    return entry ? entry.valence : 0;
   }
 };

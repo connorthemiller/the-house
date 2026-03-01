@@ -9,6 +9,8 @@ class Input {
     this.world = world;
     this.bus = bus;
     this.creature = null;
+    this.guestCreature = null;
+    this.playdateMode = false;
 
     // Drag state (shared between mouse and touch)
     this._pendingDrag = null;   // { type: 'creature'|'object', startX, startY, obj?, roomId?, col?, row? }
@@ -68,6 +70,13 @@ class Input {
       this.creature.row === hit.row;
   }
 
+  _isGuestAt(hit) {
+    if (!this.guestCreature || !hit || !hit.roomId) return false;
+    return this.guestCreature.room === hit.roomId &&
+      this.guestCreature.col === hit.col &&
+      this.guestCreature.row === hit.row;
+  }
+
   // --- Mouse handlers ---
 
   _onMouseDown(e) {
@@ -86,14 +95,16 @@ class Input {
         return;
       }
 
-      // Check draggable object
-      var obj = this.world.getObjectAt(hit.roomId, hit.col, hit.row);
-      if (obj && obj.userPlaced) {
-        this._pendingDrag = {
-          type: 'object', startX: e.clientX, startY: e.clientY,
-          obj: obj, roomId: hit.roomId, col: hit.col, row: hit.row
-        };
-        return;
+      // Check draggable object (disabled in playdate mode)
+      if (!this.playdateMode) {
+        var obj = this.world.getObjectAt(hit.roomId, hit.col, hit.row);
+        if (obj && obj.userPlaced) {
+          this._pendingDrag = {
+            type: 'object', startX: e.clientX, startY: e.clientY,
+            obj: obj, roomId: hit.roomId, col: hit.col, row: hit.row
+          };
+          return;
+        }
       }
     }
 
@@ -190,14 +201,16 @@ class Input {
         return;
       }
 
-      var obj = this.world.getObjectAt(hit.roomId, hit.col, hit.row);
-      if (obj && obj.userPlaced) {
-        e.preventDefault();
-        this._pendingDrag = {
-          type: 'object', startX: touch.clientX, startY: touch.clientY,
-          obj: obj, roomId: hit.roomId, col: hit.col, row: hit.row
-        };
-        return;
+      if (!this.playdateMode) {
+        var obj = this.world.getObjectAt(hit.roomId, hit.col, hit.row);
+        if (obj && obj.userPlaced) {
+          e.preventDefault();
+          this._pendingDrag = {
+            type: 'object', startX: touch.clientX, startY: touch.clientY,
+            obj: obj, roomId: hit.roomId, col: hit.col, row: hit.row
+          };
+          return;
+        }
       }
     }
   }
@@ -460,6 +473,17 @@ class Input {
       return;
     }
 
+    // Guest creature tap check
+    if (this._isGuestAt(hit)) {
+      this.bus.emit('input:guest-tapped', {
+        creature: this.guestCreature,
+        roomId: hit.roomId,
+        col: hit.col,
+        row: hit.row
+      });
+      return;
+    }
+
     var obj = this.world.getObjectAt(hit.roomId, hit.col, hit.row);
     if (obj) {
       this.bus.emit('input:object-tapped', {
@@ -469,11 +493,14 @@ class Input {
         row: hit.row
       });
     } else {
-      this.bus.emit('input:empty-tapped', {
-        roomId: hit.roomId,
-        col: hit.col,
-        row: hit.row
-      });
+      // No emoji picker in playdate mode
+      if (!this.playdateMode) {
+        this.bus.emit('input:empty-tapped', {
+          roomId: hit.roomId,
+          col: hit.col,
+          row: hit.row
+        });
+      }
     }
   }
 }

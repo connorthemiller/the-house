@@ -20,6 +20,8 @@ class UI {
     this.world = world;
     this.renderer = renderer;
     this.creature = null;
+    this.guestCreature = null;
+    this.playdateMode = false;
     this.overlay = document.getElementById('ui-overlay');
     this.hud = document.getElementById('hud');
     this.navContainer = document.getElementById('room-nav');
@@ -32,6 +34,7 @@ class UI {
     this._onObjectTapped = this._onObjectTapped.bind(this);
     this._onEmptyTapped = this._onEmptyTapped.bind(this);
     this._onCreatureTapped = this._onCreatureTapped.bind(this);
+    this._onGuestTapped = this._onGuestTapped.bind(this);
     this._onDayNight = this._onDayNight.bind(this);
     this._onDocClick = this._onDocClick.bind(this);
     this._careCooldowns = {};
@@ -45,6 +48,7 @@ class UI {
     this.bus.on('input:object-tapped', this._onObjectTapped);
     this.bus.on('input:empty-tapped', this._onEmptyTapped);
     this.bus.on('input:creature-tapped', this._onCreatureTapped);
+    this.bus.on('input:guest-tapped', this._onGuestTapped);
     this.bus.on('daynight:changed', this._onDayNight);
     document.addEventListener('mousedown', this._onDocClick, true);
 
@@ -63,6 +67,7 @@ class UI {
     this.bus.off('input:object-tapped', this._onObjectTapped);
     this.bus.off('input:empty-tapped', this._onEmptyTapped);
     this.bus.off('input:creature-tapped', this._onCreatureTapped);
+    this.bus.off('input:guest-tapped', this._onGuestTapped);
     this.bus.off('daynight:changed', this._onDayNight);
     document.removeEventListener('mousedown', this._onDocClick, true);
   }
@@ -274,6 +279,63 @@ class UI {
       btn.addEventListener('click', confirm);
       input.addEventListener('keydown', onKey);
     });
+
+    document.body.appendChild(overlay);
+    this.activePanel = overlay;
+  }
+
+  _onGuestTapped(data) {
+    this._dismissPanel();
+    var c = data.creature;
+    if (!c) return;
+
+    var hungerPct = Math.round(c.drives.hunger * 100);
+    var curiosityPct = Math.round(c.drives.curiosity * 100);
+    var comfortPct = Math.round(c.drives.comfort * 100);
+    var energyPct = Math.round(c.drives.energy * 100);
+    var actionText = c.currentAction ? c.currentAction.action.replace(/_/g, ' ') : 'idle';
+    var moodText = c.mood || 'okay';
+
+    var overlay = document.createElement('div');
+    overlay.className = 'creature-modal-overlay';
+
+    overlay.innerHTML =
+      '<div class="creature-modal guest-modal">' +
+        '<div class="creature-modal-header">' +
+          '<span class="creature-modal-emoji">' + c.emoji + '</span>' +
+          '<div>' +
+            '<div class="creature-modal-name">' + c.name +
+              '<span class="guest-badge">guest</span>' +
+            '</div>' +
+            '<div class="creature-modal-species">' + c.species + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<hr class="creature-modal-divider">' +
+        '<div class="creature-modal-row">' +
+          '<span class="creature-modal-row-label">mood</span>' +
+          '<span class="creature-modal-row-value">' + moodText + '</span>' +
+        '</div>' +
+        '<div class="creature-modal-row">' +
+          '<span class="creature-modal-row-label">action</span>' +
+          '<span class="creature-modal-row-value">' + actionText + '</span>' +
+        '</div>' +
+        this._personalitySection(c) +
+        '<hr class="creature-modal-divider">' +
+        '<div>' +
+          this._driveBar('hunger', hungerPct, '#c66') +
+          this._driveBar('curiosity', curiosityPct, '#6ac') +
+          this._driveBar('comfort', comfortPct, '#a6c') +
+          this._driveBar('energy', energyPct, '#ca6') +
+        '</div>' +
+        '<div class="creature-modal-hint">visiting creature</div>' +
+      '</div>';
+
+    var self = this;
+    overlay.addEventListener('mousedown', function(e) {
+      if (e.target === overlay) self._dismissPanel();
+    });
+    var box = overlay.querySelector('.creature-modal');
+    box.addEventListener('mousedown', function(e) { e.stopPropagation(); });
 
     document.body.appendChild(overlay);
     this.activePanel = overlay;

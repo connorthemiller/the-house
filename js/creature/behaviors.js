@@ -17,6 +17,10 @@ export var methods = {
       case 'sleep': this._doSleep(act); break;
       case 'seek_sleep': this._doSeekSleep(act, perception); break;
       case 'seek_comfort': this._doSeekComfort(act, perception); break;
+      case 'approach_friend': this._doApproachFriend(act); break;
+      case 'play_together': this._doPlayTogether(act); break;
+      case 'rest_together': this._doRestTogether(act); break;
+      case 'share_space': this._doShareSpace(act); break;
     }
   },
 
@@ -204,5 +208,58 @@ export var methods = {
       this._moveTowardRoom(target.inRoom);
     }
     this._speak('seek_comfort', act.target);
+  },
+
+  // --- Social behaviors ---
+
+  _doApproachFriend: function(act) {
+    if (!this.companion) { this.currentAction = null; return; }
+    this._moveToward(this.companion.col, this.companion.row);
+    this._speak('approach_friend');
+    this.currentAction = null;
+  },
+
+  _doPlayTogether: function(act) {
+    if (!this.companion) { this.currentAction = null; return; }
+    if (act.turnsRemaining > 0) {
+      this._speak('play_together');
+      act.turnsRemaining--;
+      if (act.turnsRemaining === 0) {
+        this.drives.curiosity = Math.max(0, this.drives.curiosity - 0.3);
+        this.drives.comfort = Math.max(0, this.drives.comfort - 0.1);
+        this._recordFriendInteraction('play_together');
+        this._updateDevelopment('play');
+        this.currentAction = null;
+      }
+    }
+  },
+
+  _doRestTogether: function(act) {
+    if (!this.companion) { this.currentAction = null; return; }
+    if (act.turnsRemaining > 0) {
+      this._speak('rest_together');
+      act.turnsRemaining--;
+      if (act.turnsRemaining === 0) {
+        this.drives.energy = Math.max(0, this.drives.energy - 0.15);
+        this.drives.comfort = Math.max(0, this.drives.comfort - 0.1);
+        this._recordFriendInteraction('rest_together');
+        this._updateDevelopment('rest');
+        this.currentAction = null;
+      }
+    }
+  },
+
+  _doShareSpace: function(act) {
+    if (!this.companion) { this.currentAction = null; return; }
+    if (act.turnsRemaining > 0) {
+      this._speak('share_space');
+      act.turnsRemaining--;
+      if (act.turnsRemaining === 0) {
+        this.drives.comfort = Math.max(0, this.drives.comfort - 0.25);
+        this._recordFriendInteraction('share_space');
+        this._updateDevelopment('cuddle');
+        this.currentAction = null;
+      }
+    }
   }
 };

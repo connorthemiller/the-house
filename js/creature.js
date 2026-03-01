@@ -32,6 +32,8 @@ class Creature {
     this.currentAction = null;
     this.speech = null;
     this.memory = {};
+    this.friendMemory = {};
+    this.companion = null;
     this.development = {
       actionCounts: {},
       totalActions: 0,
@@ -142,6 +144,7 @@ class Creature {
       },
       mood: this.mood,
       memory: this.memory,
+      friendMemory: this.friendMemory,
       development: this.development,
       currentAction: this.currentAction
         ? { action: this.currentAction.action, turnsRemaining: this.currentAction.turnsRemaining }
@@ -185,6 +188,9 @@ class Creature {
           familiarity: 0.2
         };
       }
+    }
+    if (saved.friendMemory) {
+      this.friendMemory = saved.friendMemory;
     }
     if (saved.development) {
       this.development = saved.development;
