@@ -97,6 +97,25 @@
       </div>
     </div>
   </div>
+  <div id="session-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-box session-box">
+      <div class="modal-label">share this code with a friend</div>
+      <div class="session-code" id="session-code-display"></div>
+      <input type="text" class="session-link modal-input" id="session-link-input" readonly>
+      <div class="session-status" id="session-status">waiting for friend...</div>
+      <div class="invite-actions">
+        <button class="modal-btn" data-action="copy" id="session-copy-btn">copy link</button>
+        <button class="modal-btn" data-action="close" id="session-close-btn">start exploring</button>
+      </div>
+    </div>
+  </div>
+  <div id="join-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-box join-box">
+      <div class="modal-label">joining playdate...</div>
+      <div class="session-status" id="join-status">connecting...</div>
+    </div>
+  </div>
+  <div id="connection-banner" class="connection-banner" style="display:none;"></div>
   <div id="naming-modal" class="modal-overlay" style="display:none;">
     <div class="modal-box">
       <div class="modal-emoji" id="modal-emoji"></div>

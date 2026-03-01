@@ -732,6 +732,69 @@ canvas {
   border-color: #3a5a3a;
 }
 
+/* Session code modal */
+.session-box, .join-box {
+  min-width: 280px;
+  max-width: 90vw;
+}
+
+.session-code {
+  font-size: 32px;
+  font-weight: bold;
+  letter-spacing: 6px;
+  color: #6a8;
+  padding: 12px 0 8px;
+  text-align: center;
+}
+
+.session-link {
+  font-size: 11px !important;
+  text-align: left !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.session-status {
+  font-size: 11px;
+  color: #555;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.session-status.connected {
+  color: #6a8;
+}
+
+/* Connection banner */
+.connection-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 6px 12px;
+  font-family: monospace;
+  font-size: 12px;
+  text-align: center;
+  z-index: 200;
+  background: #2a1a1a;
+  color: #c88;
+  border-bottom: 1px solid #5a3a3a;
+}
+
+.connection-banner.reconnected {
+  background: #1a2a1a;
+  color: #6a8;
+  border-bottom-color: #3a5a3a;
+}
+
+/* Playdate offline label */
+.playdate-btn .offline-label {
+  font-size: 10px;
+  color: #666;
+  margin-left: 4px;
+}
+
 /* Mobile adjustments */
 @media (max-width: 600px) {
   body {
@@ -782,5 +845,15 @@ canvas {
   .invite-box, .shareback-box {
     min-width: auto;
     width: 90vw;
+  }
+
+  .session-box, .join-box {
+    min-width: auto;
+    width: 90vw;
+  }
+
+  .session-code {
+    font-size: 24px;
+    letter-spacing: 4px;
   }
 }

@@ -4,7 +4,7 @@ Digital creature habitat. Vanilla JS + Canvas, no build step, ES modules. A lobs
 
 ## Current State
 
-Phases 0-3 complete + gap-fill sprint + mobile-first UI rework + social playdates. Equal room sizes (all 6x5), drives HUD and care buttons on main view (below canvas), creature modal is inspection-only. Playdate system: async local simulation via share links, 3 locations (park/cafe/mountains), 4 social actions. Next up: Phase 4 (LLM reflective layer).
+Phases 0-3 complete + gap-fill sprint + mobile-first UI rework + social playdates + Firebase real-time sync. Equal room sizes (all 6x5), drives HUD and care buttons on main view (below canvas), creature modal is inspection-only. Playdate system: real-time Firebase sync (primary) with async URL fallback. 3 locations (park/cafe/mountains), 4 social actions. Next up: Phase 4 (LLM reflective layer).
 
 ## File Map
 
@@ -27,7 +27,9 @@ js/creature.js          Creature class (hub, imports creature/ modules)
   creature/memory.js       object memory, valence, familiarity/habituation
   creature/development.js  action counts, personality modifiers
   creature/speech.js       context-aware speech generation
-js/playdate.js          packet encode/decode, URL parsing, guest factory, link gen
+js/playdate.js          packet encode/decode, URL parsing, guest factory, link gen (async fallback)
+js/firebase-config.js   Firebase app init, db ref export, connection check with timeout
+js/firebase-sync.js     session CRUD, puppet factory, sync write/read, disconnect handling
 data/house.json         room definitions, doorways
 data/objects.json       default furniture catalog
 data/playdate-locations.json  park, cafe, mountains playdate locations
