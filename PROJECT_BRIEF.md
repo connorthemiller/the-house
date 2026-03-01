@@ -30,7 +30,7 @@ These were decided during the design conversation and are not open for revisitat
 
 **3. The LLM is a reflective layer, not a real-time cortex.** The fast loop (every tick) is purely algorithmic: drives, perception, affect, action selection. The slow loop (periodic, event-triggered) calls the LLM for reflection: memory consolidation, association formation, interest development, and occasional self-initiated speech. This keeps costs manageable and the simulation responsive.
 
-**4. Cloud API for the LLM.** No requirement for local-only Ollama. Cloud APIs provide better model quality for the reflective layer, which doesn't need to be instant.
+**4. BYO API key for the LLM.** Users provide their own API key (Anthropic, OpenAI, etc.) via a settings panel. Key stored in localStorage, calls made client-side. No server component needed. This keeps the project static-hostable. Cloud APIs provide better model quality for the reflective layer, which doesn't need to be instant.
 
 **5. Day/night tracks the user's real clock.** The house darkens at night (user's local time). The creature gets sleepy. Activity slows. When you visit matters — 2am feels different from noon. This creates natural behavioral rhythms without simulating a clock.
 
@@ -306,7 +306,7 @@ All state persists across sessions:
 - Reflection history: narrative memories, association changelog
 - Day/night is always derived from the real clock, never stored
 
-Storage: localStorage for browser-only, or local JSON files if using a server component (needed for LLM API calls). The server component is likely necessary for the cloud LLM integration.
+Storage: localStorage for all state. LLM integration (Phase 4) uses a BYO API key model -- the user provides their own API key, stored in localStorage, and LLM calls are made client-side. No server component needed. The project remains fully static-hostable.
 
 ---
 
@@ -317,7 +317,7 @@ Storage: localStorage for browser-only, or local JSON files if using a server co
 - **No Computing Tasks.** The creature lives in its house, not in your file system.
 - **No multi-creature UI.** One creature per house. State is namespaced for future expansion.
 - **No pixel art / sprite generation.** Emojis only. This is a feature, not a limitation.
-- **No multi-agent social dynamics.** The creature's only social relationship is with the caregiver.
+- **No persistent multi-creature worlds.** One creature per house. Social interaction happens through playdates (real-time Firebase sync or async URL sharing), not through cohabitation.
 
 ---
 

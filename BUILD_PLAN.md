@@ -25,6 +25,8 @@ Incremental phases. Each phase produces something testable. No phase depends on 
 
 **Why this phase matters:** The world needs to work before anything lives in it. If the house isn't charming to look at and satisfying to interact with, the creature won't save it. This is also where you make the rendering decision (Canvas vs. DOM grid) and lock the visual style.
 
+**Status: COMPLETE.** Vanilla JS + Canvas chosen over SvelteKit. EventBus pub/sub. 48px grid cells. Dark terrarium aesthetic.
+
 ---
 
 ## Phase 1: The Creature Moves
@@ -55,6 +57,8 @@ Incremental phases. Each phase produces something testable. No phase depends on 
 
 **Done when:** The creature wanders the house. It goes to the kitchen when hungry. It investigates new objects when curious. It reacts when you pick it up. You can watch it for five minutes and form a rough mental model of what it's "trying to do." The fast loop works.
 
+**Status: COMPLETE.** Lobster creature with hunger + curiosity drives. Cell-by-cell movement with doorway traversal. Canned speech bubbles.
+
 ---
 
 ## Phase 2: Drives, Affect, and Care
@@ -74,6 +78,8 @@ Incremental phases. Each phase produces something testable. No phase depends on 
 
 **Done when:** The creature has moods you can read. Petting it when it's anxious produces a visible change. Feeding it when it's hungry is satisfying. Ignoring it makes it restless. The activity log shows you *why* it's doing what it's doing. It feels like taking care of something.
 
+**Status: COMPLETE.** Four drives (hunger, curiosity, comfort, energy), derived mood, care buttons, score-and-pick action selection with noise, urgency overrides, drag/drop creature and objects.
+
 ---
 
 ## Phase 3: Memory and Habituation
@@ -90,13 +96,46 @@ Incremental phases. Each phase produces something testable. No phase depends on 
 
 **Done when:** The creature behaves differently on day 3 than on day 1. It has room preferences. It remembers where food is. New objects excite it more than familiar ones. You can see its personality forming. The Boundary Test starts to pass.
 
+**Status: COMPLETE.** Object memory with valence/familiarity, developmental personality modifiers, context-aware speech, habituation/novelty decay. Activity log panel added. Gap-fill sprint and mobile-first UI rework also landed here.
+
+---
+
+---
+
+## Phase 3.5: Social Playdates
+**Goal:** Creatures can meet. Two players' creatures interact in a shared playdate location in real time.
+
+**Build:**
+- Firebase Realtime Database as sync layer (free Spark plan)
+- Session model: 6-char session codes, join-by-link (`#session=CODE`)
+- Each player runs their creature locally; Firebase syncs position, speech, mood, drives, and current action
+- Puppet system: remote creature rendered as a lightweight plain object (not a full Creature instance)
+- SyncWriter: writes local creature state on every bus event, throttled to 5 writes/sec
+- SyncReader: listens for remote player join/leave/update via Firebase child events
+- Disconnect handling: onDisconnect removes player node; connection banner shows reconnecting/reconnected
+- 3 playdate locations (Park, Cafe, Mountains) with dedicated room layouts and objects
+- 4 social actions: approach_friend, play_together, rest_together, share_space
+- Friend memory: creatures remember who they've had playdates with (name, species, valence)
+- Async URL fallback: if Firebase is unreachable, falls back to the original share-link system (creature packets encoded as base64 in URL hash)
+- Security: HTML escaping on all innerHTML, crypto-secure session/player IDs, Firebase validation rules, input validation on puppet data, write throttling
+
+**Files added:**
+- `js/firebase-config.js` -- Firebase init, connection check with 5s timeout
+- `js/firebase-sync.js` -- Session CRUD, puppet factory, SyncWriter/SyncReader, disconnect handling
+- `js/playdate.js` -- Async fallback (packet encode/decode, guest creature factory)
+- `data/playdate-locations.json` -- Park, Cafe, Mountains room definitions
+
+**Done when:** Player A creates a playdate, picks a location, and gets a session code. Player B opens the join link. Both creatures appear on both screens, wandering and interacting in real time. Speech bubbles, mood, and position sync smoothly. Either player can end the playdate and return home with friend memory saved. If Firebase is down, the old async link-sharing flow still works.
+
+**Status: COMPLETE.**
+
 ---
 
 ## Phase 4: The Reflective Layer (LLM)
 **Goal:** The creature thinks. Periodically, it reflects on its experience, and those reflections change who it is.
 
 **Build:**
-- LLM integration: cloud API client (configurable provider — Anthropic, OpenAI, Groq, etc.)
+- LLM integration: BYO API key model. User provides their own API key (Anthropic, OpenAI, etc.) via a settings panel. Key stored in localStorage, calls made client-side. No server component needed. This keeps the project static-hostable and lets it scale without backend costs.
 - Reflection trigger system: timer-based (every N minutes) + event-triggered (significant events, accumulation threshold)
 - Snapshot assembler: constructs the structured prompt from current state, recent memories, associations, personality context
 - Reflection parser: processes LLM response into structured outputs (memory consolidation, association updates, interest formation, optional speech)
@@ -112,7 +151,14 @@ Incremental phases. Each phase produces something testable. No phase depends on 
 - The creature does not "know" it's an AI. The prompt frames it as a small creature experiencing its life.
 - The LLM is asked to respond *as* the creature's inner experience, not *about* the creature
 - Output format is structured JSON for reliable parsing
-- Fallback: if the LLM call fails, the fast loop continues normally. No degradation of core behavior.
+- Fallback: if the LLM call fails or no API key is configured, the fast loop continues normally. No degradation of core behavior. The creature is fully functional without an LLM -- the reflective layer enriches but does not constitute.
+
+**API key model:**
+- Settings panel (accessible from home screen) where users paste their API key
+- Key stored in localStorage (never sent to any server besides the LLM provider)
+- Provider selector: Anthropic (Claude), OpenAI (GPT), or other compatible APIs
+- Usage indicator: show approximate token cost per reflection so users can budget
+- Graceful no-key state: creature works fine without it, settings panel shows explanation of what the LLM adds
 
 **Done when:** The creature surprises you. It forms an association you didn't expect. It says something you didn't program. It develops an interest that emerges from its accumulated experience rather than from its initial configuration. The Surprise Test has a real chance of passing.
 
@@ -153,11 +199,12 @@ Incremental phases. Each phase produces something testable. No phase depends on 
 ## Build Order Summary
 
 ```
-Phase 0: The Empty House          (world exists, no creature)
-Phase 1: The Creature Moves       (fast loop, minimal drives, movement)
-Phase 2: Drives, Affect, and Care (full emotional system, caregiver interaction)
-Phase 3: Memory and Habituation   (past matters, personality forms)
-Phase 4: The Reflective Layer     (LLM adds cognition, surprise becomes possible)
+Phase 0: The Empty House          (world exists, no creature)              DONE
+Phase 1: The Creature Moves       (fast loop, minimal drives, movement)    DONE
+Phase 2: Drives, Affect, and Care (full emotional system, caregiver)       DONE
+Phase 3: Memory and Habituation   (past matters, personality forms)        DONE
+Phase 3.5: Social Playdates       (Firebase real-time + async fallback)    DONE
+Phase 4: The Reflective Layer     (BYO API key, LLM reflection)           NEXT
 Phase 5: Polish and Persistence   (it feels alive across sessions)
 Phase 6: The Caregiver Effect     (the experiment that validates everything)
 ```

@@ -6,7 +6,7 @@ How to keep building this project efficiently as it grows, without needing a ful
 
 ## The Core Problem
 
-Every Claude Code session starts with zero memory of previous sessions. The project is ~2,800 lines and growing. If every task starts with "read the whole project," you burn context window and budget before real work begins. This guide fixes that.
+Every Claude Code session starts with zero memory of previous sessions. The project is ~4,750 lines and growing. If every task starts with "read the whole project," you burn context window and budget before real work begins. This guide fixes that.
 
 ---
 
@@ -45,13 +45,14 @@ The project is already modular. The key to efficient development is treating mod
 
 ```
 index.html              Entry point, loads main.js
-js/main.js              Init, wiring, render loop
+js/main.js              Init (home + playdate modes), event wiring, render loop
 js/eventbus.js          Pub/sub (on/off/emit)
 js/world.js             Room/object state (add/remove/query)
 js/renderer.js          Canvas drawing (rooms, walls, objects, creature, lighting)
 js/daynight.js          Real-clock day/night cycle
 js/input.js             Mouse/touch, drag, swipe, tap detection
-js/ui.js                Info panel, emoji picker, creature modal, HUD
+js/ui.js                Info panel, emoji picker, creature modal, HUD, care bar
+js/activitylog.js       Color-coded event log panel
 js/persistence.js       localStorage save/load
 js/creature.js          Creature class (hub that imports creature/ modules)
   js/creature/drives.js       Drive growth and reset
@@ -59,11 +60,15 @@ js/creature.js          Creature class (hub that imports creature/ modules)
   js/creature/actions.js      Action scoring and selection
   js/creature/behaviors.js    Action execution (eat, sleep, investigate, etc.)
   js/creature/movement.js     Cell-by-cell pathfinding, doorway traversal
-  js/creature/memory.js       Object memory, valence, interaction tracking
+  js/creature/memory.js       Object memory, valence, familiarity/habituation
   js/creature/development.js  Action counts, personality modifiers
   js/creature/speech.js       Context-aware speech generation
+js/playdate.js          Async packet encode/decode, URL parsing, guest factory
+js/firebase-config.js   Firebase app init, db ref export, connection check
+js/firebase-sync.js     Session CRUD, puppet factory, sync write/read, disconnect
 data/house.json         Room definitions, doorways
 data/objects.json       Default furniture catalog
+data/playdate-locations.json  Park, cafe, mountains playdate locations
 ```
 
 ### How Modules Communicate
@@ -229,9 +234,11 @@ As you build future phases:
 
 | File | Current Lines | Watch For |
 |------|--------------|-----------|
-| renderer.js | 369 | Creature rendering vs room rendering. Split if creature visuals get complex (animations, particles). |
-| ui.js | 395 | Already doing info panel + emoji picker + creature modal + HUD. If you add the activity log panel or journal, split by panel type. |
-| input.js | 481 | Already the largest file. Drag logic is complex. Consider splitting into input/tap.js, input/drag.js, input/swipe.js if adding new gesture types. |
+| main.js | 863 | Largest file. Home init, playdate init, Firebase flows, UI wiring all mixed. Consider splitting playdate logic into js/playdate-init.js. |
+| input.js | 508 | Drag logic is complex. Consider splitting into input/tap.js, input/drag.js, input/swipe.js if adding new gesture types. |
+| ui.js | 493 | Info panel + emoji picker + creature modal + HUD + care bar. Split by panel type if adding journal or settings panel. |
+| firebase-sync.js | 456 | Session CRUD + puppet + SyncWriter + SyncReader + connection monitor. Manageable for now but watch if sync logic grows. |
+| renderer.js | 386 | Creature rendering vs room rendering. Split if creature visuals get complex (animations, particles). |
 
 ---
 
@@ -262,7 +269,7 @@ Things to keep in mind as you build toward a product:
 
 ### Technical
 - **No build step** is actually an advantage for distribution (static hosting, easy deployment)
-- **localStorage persistence** works for MVP but needs a server component for LLM integration (Phase 4) and cross-device sync
+- **localStorage persistence** works for MVP. Phase 4 uses a BYO API key model (user provides their own LLM API key, stored in localStorage, calls made client-side) so no server component needed. Cross-device sync is a future consideration.
 - **State versioning** -- start including a version number in saved state NOW so you can migrate old saves when the format changes. Add this before Phase 4.
 
 ### Product
@@ -272,7 +279,7 @@ Things to keep in mind as you build toward a product:
 
 ### What to Build vs Buy
 - **Canvas rendering** -- keep building (it's core)
-- **Persistence/sync** -- evaluate Firebase or Supabase when the time comes
+- **Persistence/sync** -- Firebase Realtime Database already integrated for playdates (free Spark plan)
 - **LLM integration** -- keep the provider abstract (Phase 4 design decision)
 - **Analytics** -- add basic event tracking before launch (which actions are most common, session length, return rate)
 
@@ -284,25 +291,30 @@ Copy this into CLAUDE.md (and keep it updated):
 
 ```
 ## File Map
-js/main.js          -- init, event wiring, render loop (157 lines)
+js/main.js          -- init (home + playdate), event wiring, render loop (863 lines)
 js/eventbus.js      -- pub/sub: on/off/emit (40 lines)
 js/world.js         -- room/object state manager (103 lines)
-js/renderer.js      -- canvas drawing (369 lines)
+js/renderer.js      -- canvas drawing (386 lines)
 js/daynight.js      -- real-clock day/night cycle (81 lines)
-js/input.js         -- mouse/touch/drag/swipe (481 lines)
-js/ui.js            -- info panel, emoji picker, creature modal, HUD (395 lines)
+js/input.js         -- mouse/touch/drag/swipe (508 lines)
+js/ui.js            -- info panel, emoji picker, creature modal, HUD (493 lines)
+js/activitylog.js   -- color-coded event log panel (147 lines)
 js/persistence.js   -- localStorage save/load (101 lines)
-js/creature.js      -- Creature class hub (172 lines)
+js/creature.js      -- Creature class hub (210 lines)
   creature/drives.js       -- drive growth/reset (41 lines)
-  creature/perception.js   -- room scanning (99 lines)
-  creature/actions.js      -- action scoring/selection (119 lines)
-  creature/behaviors.js    -- action execution (207 lines)
-  creature/movement.js     -- pathfinding, doorways (160 lines)
-  creature/memory.js       -- object memory, valence (45 lines)
+  creature/perception.js   -- room scanning (109 lines)
+  creature/actions.js      -- action scoring/selection (154 lines)
+  creature/behaviors.js    -- action execution (265 lines)
+  creature/movement.js     -- pathfinding, doorways (163 lines)
+  creature/memory.js       -- object memory, valence (104 lines)
   creature/development.js  -- personality modifiers (55 lines)
-  creature/speech.js       -- context-aware speech (149 lines)
+  creature/speech.js       -- context-aware speech (174 lines)
+js/playdate.js      -- async packet encode/decode, guest factory (201 lines)
+js/firebase-config.js -- Firebase app init, connection check (99 lines)
+js/firebase-sync.js -- session CRUD, puppet, sync write/read (456 lines)
 data/house.json     -- room definitions, doorways
 data/objects.json   -- default furniture catalog
+data/playdate-locations.json -- playdate locations (park/cafe/mountains)
 ```
 
 ---
