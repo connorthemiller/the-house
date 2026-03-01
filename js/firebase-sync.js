@@ -143,8 +143,8 @@ async function createSession(locationId, creature) {
   var playerRef = mod.ref(db, 'sessions/' + code + '/players/' + playerId);
   await mod.set(playerRef, _creatureSnapshot(creature, null));
 
-  // Set up onDisconnect to remove our player node
-  await mod.onDisconnect(playerRef).remove();
+  // onDisconnect is set up in SyncWriter.start(), not here
+  // (createSession is followed by a page reload which would trigger it prematurely)
 
   return { code: code, playerId: playerId };
 }
@@ -182,8 +182,7 @@ async function joinSession(sessionCode, creature) {
   // Update status to active
   await mod.set(mod.ref(db, 'sessions/' + sessionCode + '/meta/status'), 'active');
 
-  // Set up onDisconnect
-  await mod.onDisconnect(playerRef).remove();
+  // onDisconnect is set up in SyncWriter.start()
 
   return {
     code: sessionCode,
@@ -249,6 +248,9 @@ SyncWriter.prototype.start = async function() {
   this._mod = mod;
   this._started = true;
 
+  // Set up onDisconnect to remove our player node when we truly disconnect
+  await mod.onDisconnect(this._playerRef).remove();
+
   var self = this;
   var write = function() { self._write(); };
 
@@ -301,6 +303,12 @@ SyncWriter.prototype.stop = function() {
   if (this._writeTimer) {
     clearTimeout(this._writeTimer);
     this._writeTimer = null;
+  }
+  // Cancel onDisconnect (we're ending cleanly, not crashing)
+  // and remove our player data explicitly
+  if (this._playerRef && this._mod) {
+    this._mod.onDisconnect(this._playerRef).cancel();
+    this._mod.remove(this._playerRef);
   }
 };
 
