@@ -132,19 +132,18 @@ async function createSession(locationId, creature) {
   }
 
   var now = Date.now();
-  await mod.set(sessionRef, {
-    meta: {
-      location: locationId,
-      status: 'waiting',
-      createdAt: now
-    },
-    players: {
-      [playerId]: _creatureSnapshot(creature, null)
-    }
+  // Write meta and player separately (Firebase rules grant write at
+  // the meta and players/$id levels, not at the session root)
+  var metaRef = mod.ref(db, 'sessions/' + code + '/meta');
+  await mod.set(metaRef, {
+    location: locationId,
+    status: 'waiting',
+    createdAt: now
   });
+  var playerRef = mod.ref(db, 'sessions/' + code + '/players/' + playerId);
+  await mod.set(playerRef, _creatureSnapshot(creature, null));
 
   // Set up onDisconnect to remove our player node
-  var playerRef = mod.ref(db, 'sessions/' + code + '/players/' + playerId);
   await mod.onDisconnect(playerRef).remove();
 
   return { code: code, playerId: playerId };
